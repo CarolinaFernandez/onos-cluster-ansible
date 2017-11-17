@@ -1,0 +1,67 @@
+# Create "sdn" user
+---
+
+- name: Include variables
+  include_vars:
+    file: ../../../inventories/production/group_vars/all
+    name: vars
+
+- name: Create group "sdxl2"
+  group:
+    name: sdxl2
+    state: present
+
+- name: Create user "sdn" and extend/append its groups with "sdxl2"
+  user:
+    name: sdn
+    shell: /bin/bash
+    groups: sdxl2
+    append: yes
+
+- name: Allow "sdxl2" group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%sdxl2'
+    line: '%sdxl2 ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Add sudoer user to "sdxl2" group
+  user:
+    name="{{vars.user.deployer.id}}"
+    groups=sdxl2
+    append=yes
+    state=present
+    createhome=yes
+
+- name: Ensure SSH folder present for deployment user
+  file:
+    path="/home/{{vars.user.deployer.id}}/.ssh"
+    state=directory
+
+- name: Copy SSH key
+  copy:
+    src="~/{{vars.user.deployer.key}}.pub"
+    dest="/home/{{vars.user.deployer.id}}/.ssh/id_rsa_{{vars.user.deployer.id}}.pub"   
+    owner="{{vars.user.deployer.id}}"
+    group="{{vars.user.deployer.id}}"
+    force=true
+    mode=0644
+
+- name: Ensure SSH authorized_keys present
+  file:
+    path="/home/{{vars.user.deployer.id}}/.ssh/authorized_keys"
+    state=touch
+    owner="{{vars.user.deployer.id}}"
+    force=yes
+
+- name: Set up authorised keys for the deployer user
+  shell: |
+    cat "/home/{{vars.user.deployer.id}}/.ssh/id_rsa_{{vars.user.deployer.id}}.pub" >> /home/{{vars.user.deployer.id}}/.ssh/authorized_keys
+
+#- name: Set up authorised keys for the deployer user
+#  authorized_key:
+#     user="{{vars.user.deployer.id}}"
+#     key="/home/{{vars.user.deployer.id}}/.ssh/id_rsa_{{vars.user.deployer.id}}.pub"
+#  with_file:
+#    - ~/{{vars.user.deployer.key}}.pub

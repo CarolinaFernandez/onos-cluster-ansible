@@ -1,0 +1,35 @@
+# Install required packages
+---
+
+- name: Add PPA to sources
+  shell: |
+    echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main
+    deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main
+    " >> /etc/apt/sources.list.d/webupd8team-java.list
+
+- name: Add PPA key
+  command: apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+
+- name: Update repositories
+  apt:
+    update_cache: yes
+
+- name: Install Java 8
+  apt:
+    name: oracle-java8-installer
+
+- name: Set Java8 as default
+  apt:
+    name: oracle-java8-set-default
+
+- name: Install Git
+  apt:
+    name: git
+
+- name: Install VIM
+  apt:
+    name: vim
+
+- name: Install ZIP
+  apt:
+    name: zip

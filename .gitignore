@@ -1,0 +1,5 @@
+inventories/*
+!inventories/production/*.tpl
+!inventories/production/group_vars/*.tpl
+*.retry
+*.swp

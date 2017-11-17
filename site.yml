@@ -1,0 +1,19 @@
+---
+
+- name: Install pre-requirements
+  become: yes
+  remote_user: gts
+  become_user: root
+  become_method: sudo
+  hosts: controllers
+  tasks:
+    - import_tasks: roles/common/tasks/install-prereqs.yml
+
+- name: Set-up user
+  become: yes
+  remote_user: gts
+  become_user: root
+  become_method: sudo
+  hosts: controllers
+  tasks:
+    - import_tasks: roles/common/tasks/create-sdn-user.yml
