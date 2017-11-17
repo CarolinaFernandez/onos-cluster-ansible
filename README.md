@@ -22,14 +22,12 @@ lues.
 |   |   |   +--- all.tpl
 |   |   +--- hosts
 |   |   +--- hosts.tpl
-+--- master.retry
 +--- README.md
 +--- roles
 |   +--- common
 |   |   +--- tasks
 |   |   |   +--- create-sdn-user.yml
 |   |   |   +--- install-prereqs.yml
-+--- site.retry
 +--- site.yml
 ```
 
@@ -43,7 +41,7 @@ bash call.bash
 After all tasks are executed, the expected output is similar to the one below:
 
 ```bash
-PLAY RECAP ********************************************************************************************************************************************************************************************************
+PLAY RECAP ******************************************************************
 a1.b1.c1.d1                : ok=19   changed=5    unreachable=0    failed=0
 a2.b2.c2.d2                : ok=19   changed=5    unreachable=0    failed=0
 a3.b3.c3.d3                : ok=19   changed=5    unreachable=0    failed=0
