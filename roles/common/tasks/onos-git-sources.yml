@@ -1,0 +1,88 @@
+# Clone ONOS repository and load sources pointing to binaries
+---
+
+- name: Check for ONOS repository
+  stat:
+    path: ~/onos
+  register: onos_repo
+  become_user: sdn
+
+- name: Clone ONOS repository
+  git:
+    repo: https://gerrit.onosproject.org/onos
+    dest: ~/onos
+    version: onos-1.11
+    force: no
+  when: onos_repo.stat.exists == False
+  become_user: sdn
+
+- name: Ensure .bashrc exists
+  file:
+    path: ~/.bashrc
+    state: touch
+  become_user: sdn
+
+- name: Source ONOS dev's bash_profile
+  lineinfile:
+    dest: ~/.bashrc
+    state: present
+    regexp: "^. ~/onos/tools/dev/bash_profile"
+    line: ". ~/onos/tools/dev/bash_profile"
+  become_user: sdn
+
+- name: Add scripts for SSH agent
+  blockinfile:
+    dest: ~/.bashrc
+    state: present
+    content: |
+      
+      SSH_ENV="$HOME/.ssh/environment"
+      function start_agent {
+          echo "Initialising new SSH agent..."
+          /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
+          echo succeeded
+          chmod 600 "${SSH_ENV}"
+          . "${SSH_ENV}" > /dev/null
+          /usr/bin/ssh-add
+      }
+      
+      # Source SSH settings, if applicable
+      if [ -f "${SSH_ENV}" ]; then
+      . "${SSH_ENV}" > /dev/null
+      #ps ${SSH_AGENT_PID} doesn't work under cywgin
+      ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
+          start_agent;
+      }
+      else
+          start_agent;
+      fi
+  become_user: sdn
+
+- name: Source .bashrc
+  shell: . ~/.bashrc
+  become_user: sdn
+
+- name: Replace SSH agent in "onos-wait-for-start"
+  replace:
+    path: ~/onos/tools/test/bin/onos-wait-for-start
+    regexp: '(.*)ssh -t -t \$remote "(.*)'
+    replace: '\1ssh -t -t -A $remote "\2'
+  become_user: sdn
+
+#- name: Generate private SSH key for ONOS cluster (deploying) instance
+#  openssl_privatekey:
+#    path: ~/.ssh/id_rsa_test_onos_cluster
+#    type: RSA
+#  become_user: sdn
+
+#- name: Generate public SSH key for ONOS cluster (deploying) instance
+#  openssl_publickey:
+#    path: ~/.ssh/id_rsa_test_onos_cluster.pub
+#    privatekey_path: ~/.ssh/id_rsa_test_onos_cluster
+#  become_user: sdn
+
+- name: Generate SSH keys for ONOS cluster (deploying) instance
+  user:
+    name: sdn
+    generate_ssh_key: yes
+  become_user: sdn

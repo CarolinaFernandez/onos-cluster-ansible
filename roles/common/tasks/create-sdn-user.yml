@@ -1,10 +1,10 @@
 # Create "sdn" user
 ---
 
-- name: Include variables
-  include_vars:
-    file: ../../../inventories/production/group_vars/all
-    name: vars
+#- name: Include variables
+#  include_vars:
+#    file: ../../../inventories/production/group_vars/all
+#    name: vars
 
 - name: Create group for user running ONOS
   group:
@@ -54,30 +54,17 @@
     state: touch
     owner: "{{vars.deployment.user.id}}"
 
-#- name: Retrieve SSH key
-#  set_fact:
-#    ssh_key: "lookup('file', '/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub')"
-
-#- name: Retrieve SSH key
-#  shell: |
-#    "cat /home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"
-#    register: ssh_key
-
 #- name: Set up authorised keys for the deployer user
-#  lineinfile:
-#    dest: "/home/{{vars.deployment.user.id}}/.ssh/authorized_keys"
-#    state: present
-#    regexp: "^{{ssh_key}}"
-#    line: "{{ssh_key}}"
-#    mode: 0644
+#  shell: |
+#    cat "/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub" >> /home/{{vars.deployment.user.id}}/.ssh/authorized_keys
 
 - name: Set up authorised keys for the deployer user
-  shell: |
-    cat "/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub" >> /home/{{vars.deployment.user.id}}/.ssh/authorized_keys
-
-#- name: Set up authorised keys for the deployer user
-#  authorized_key:
-#     user="{{vars.deployment.user.id}}"
-#     key="/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"
-#  with_file:
-#    - ~/{{vars.deployment.user.key}}.pub
+  authorized_key:
+    user: "{{vars.deployment.user.id}}"
+    key: "{{ item }}"
+#   key: {{ lookup('file', item) }}
+#  with_fileglob:
+#    - "~/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"
+  with_lines:
+    - "cat ~/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"
+  become_user: "{{vars.deployment.user.id}}"

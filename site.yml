@@ -2,23 +2,24 @@
 
 #- name: Install pre-requirements
 #  become: yes
-#  remote_user: gts
+#  remote_user: deployment.user.id
 #  become_user: root
 #  become_method: sudo
 #  hosts: controllers
 #  tasks:
 #    - import_tasks: roles/common/tasks/install-prereqs.yml
 
-#- name: Set-up user
-#  become: yes
-#  remote_user: gts
-#  become_user: root
-#  become_method: sudo
-#  hosts: controllers
-#  tasks:
-#    - import_tasks: roles/common/tasks/create-sdn-user.yml
+- name: Set-up user
+  become: yes
+  remote_user: deployment.user.id
+  become_user: root
+  become_method: sudo
+  hosts: controllers
+  tasks:
+    - import_tasks: roles/common/tasks/create-sdn-user.yml
 
 - name: Clone ONOS repo
   hosts: controllers[0]
+  become_user: sdn
   tasks:
-    - import_tasks: roles/common/tasks/git-onos.yml
+    - import_tasks: roles/common/tasks/onos-git-sources.yml

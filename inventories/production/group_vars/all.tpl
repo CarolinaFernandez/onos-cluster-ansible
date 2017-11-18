@@ -9,3 +9,8 @@ deployment:
 onos:
   group:
     id: %remote_onos_user_id%
+  controllers:
+    - %onos_oc1_ctrl_ip%
+    - %onos_oc2_ctrl_ip%
+    - %onos_oc3_ctrl_ip%
+    - ...
