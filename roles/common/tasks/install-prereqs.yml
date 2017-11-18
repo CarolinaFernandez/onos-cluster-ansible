@@ -1,35 +1,58 @@
 # Install required packages
 ---
 
-- name: Add PPA to sources
-  shell: |
-    echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main
-    deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main
-    " >> /etc/apt/sources.list.d/webupd8team-java.list
+- block:
+  - name: Add webupd8team PPA to sources
+    lineinfile:
+      path: /etc/apt/sources.list.d/webupd8team-java.list
+      create: yes
+      state: present
+      line: "{{ item.line }}"
+    with_items:
+      - { regexp: "^deb http", line: "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" }
+      - { regexp: "^deb-src http", line: "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" }
+    become: yes
 
-- name: Add PPA key
-  command: apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+  - name: Add webupd8team PPA
+    apt_key:
+      id=0xC2518248EEA14886
+      keyserver=keyserver.ubuntu.com:80
+      state=present
+  become: yes
+  when: ansible_distribution == "Ubuntu"
 
-- name: Update repositories
+#- name: Add webupd8team PPA
+#  command: apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+
+- name: Update cache
   apt:
     update_cache: yes
+  become: yes
 
-- name: Install Java 8
-  apt:
+# Note: not working. Consider installing and accepting license manually
+# Undo: echo unregister shared/accepted-oracle-license-v1-1 | debconf-communicate oracle-java8-installer
+- name: Accept Java 8 License
+  debconf:
     name: oracle-java8-installer
+    question: shared/accepted-oracle-license-v1-1
+    value: true
+    vtype: select
+    unseen: false
+  become: yes
 
-- name: Set Java8 as default
+- name: Install Oracle Java 8 and set as default
   apt:
-    name: oracle-java8-set-default
+    name={{item}} state=latest
+    update_cache=yes
+  with_items:
+    - oracle-java8-installer
+    - oracle-java8-set-default
+  become: yes
 
-- name: Install Git
+- name: Install other ONOS dependencies
   apt:
-    name: git
-
-- name: Install VIM
-  apt:
-    name: vim
-
-- name: Install ZIP
-  apt:
-    name: zip
+    name={{item}} state=latest
+  with_items:
+    - git
+    - zip
+  become: yes

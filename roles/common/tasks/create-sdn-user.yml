@@ -6,62 +6,78 @@
     file: ../../../inventories/production/group_vars/all
     name: vars
 
-- name: Create group "sdxl2"
+- name: Create group for user running ONOS
   group:
-    name: sdxl2
+    name: "{{vars.onos.group.id}}"
     state: present
 
-- name: Create user "sdn" and extend/append its groups with "sdxl2"
+- name: Create user to run ONOS and extend/append its groups with the above
   user:
     name: sdn
     shell: /bin/bash
-    groups: sdxl2
+    groups: "{{vars.onos.group.id}}"
     append: yes
 
-- name: Allow "sdxl2" group to have passwordless sudo
+- name: Allow above group to have passwordless sudo
   lineinfile:
     dest: /etc/sudoers
     state: present
-    regexp: '^%sdxl2'
-    line: '%sdxl2 ALL=(ALL) NOPASSWD: ALL'
-    validate: 'visudo -cf %s'
+    regexp: "^%{{vars.onos.group.id}}"
+    line: "%{{vars.onos.group.id}} ALL=(ALL) NOPASSWD: ALL"
+    validate: "visudo -cf %s"
 
-- name: Add sudoer user to "sdxl2" group
+- name: Add sudoer user to above group
   user:
-    name="{{vars.user.deployer.id}}"
-    groups=sdxl2
-    append=yes
-    state=present
-    createhome=yes
+    name: "{{vars.deployment.user.id}}"
+    groups: "{{vars.onos.group.id}}"
+    append: yes
+    state: present
+    createhome: yes
 
 - name: Ensure SSH folder present for deployment user
   file:
-    path="/home/{{vars.user.deployer.id}}/.ssh"
-    state=directory
+    path: "/home/{{vars.deployment.user.id}}/.ssh"
+    state: directory
 
 - name: Copy SSH key
   copy:
-    src="~/{{vars.user.deployer.key}}.pub"
-    dest="/home/{{vars.user.deployer.id}}/.ssh/id_rsa_{{vars.user.deployer.id}}.pub"   
-    owner="{{vars.user.deployer.id}}"
-    group="{{vars.user.deployer.id}}"
-    force=true
-    mode=0644
+    src: "~/{{vars.deployment.user.key}}.pub"
+    dest: "/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"   
+    owner: "{{vars.deployment.user.id}}"
+    group: "{{vars.deployment.user.id}}"
+    force: true
+    mode: 0644
 
 - name: Ensure SSH authorized_keys present
   file:
-    path="/home/{{vars.user.deployer.id}}/.ssh/authorized_keys"
-    state=touch
-    owner="{{vars.user.deployer.id}}"
-    force=yes
+    path: "/home/{{vars.deployment.user.id}}/.ssh/authorized_keys"
+    state: touch
+    owner: "{{vars.deployment.user.id}}"
+
+#- name: Retrieve SSH key
+#  set_fact:
+#    ssh_key: "lookup('file', '/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub')"
+
+#- name: Retrieve SSH key
+#  shell: |
+#    "cat /home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"
+#    register: ssh_key
+
+#- name: Set up authorised keys for the deployer user
+#  lineinfile:
+#    dest: "/home/{{vars.deployment.user.id}}/.ssh/authorized_keys"
+#    state: present
+#    regexp: "^{{ssh_key}}"
+#    line: "{{ssh_key}}"
+#    mode: 0644
 
 - name: Set up authorised keys for the deployer user
   shell: |
-    cat "/home/{{vars.user.deployer.id}}/.ssh/id_rsa_{{vars.user.deployer.id}}.pub" >> /home/{{vars.user.deployer.id}}/.ssh/authorized_keys
+    cat "/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub" >> /home/{{vars.deployment.user.id}}/.ssh/authorized_keys
 
 #- name: Set up authorised keys for the deployer user
 #  authorized_key:
-#     user="{{vars.user.deployer.id}}"
-#     key="/home/{{vars.user.deployer.id}}/.ssh/id_rsa_{{vars.user.deployer.id}}.pub"
+#     user="{{vars.deployment.user.id}}"
+#     key="/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"
 #  with_file:
-#    - ~/{{vars.user.deployer.key}}.pub
+#    - ~/{{vars.deployment.user.key}}.pub

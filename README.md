@@ -46,3 +46,17 @@ a1.b1.c1.d1                : ok=19   changed=5    unreachable=0    failed=0
 a2.b2.c2.d2                : ok=19   changed=5    unreachable=0    failed=0
 a3.b3.c3.d3                : ok=19   changed=5    unreachable=0    failed=0
 ```
+
+## Troubleshooting
+
+### Cannot install PPA keys
+
+Modify the `/etc/sudoers` file and add the following to the specific section:
+
+```bash
+Defaults        env_keep="no_proxy http_proxy https_proxy"
+```
+
+### Issue in deployment tasks
+
+Try replicating the step manually and run again the main bash file. For instance, the task installing Java8 will fail since you need to explicitly accept its license.
