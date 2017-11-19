@@ -1,0 +1,27 @@
+# Set-up ONOS cluster
+---
+
+- name: Build ONOS repository sources
+  shell: onos-buck build onos-local --no-cache
+  args:
+    chdir: ~/onos
+  become_user: sdn
+
+- name: Insert SSH keys on ONOS cluster instances
+  shell: "onos-push-keys $OC{{ oc }}"
+  vars:
+    # Filter addresses in list to just have the IP value
+    oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
+#    ip: "{{ item.value.ip.ctrl }}"
+  with_dict:
+    "{{ onos.controllers }}"
+  become_user: sdn
+
+- name: Install prerequisites
+  shell: stc prerequisites
+  become_user: sdn
+
+- name: Run the cluster
+  shell: stc setup
+  become_user: sdn
+

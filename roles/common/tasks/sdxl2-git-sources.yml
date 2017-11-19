@@ -1,0 +1,26 @@
+# Clone SDX-L2 repository and source in modules
+---
+
+- name: Check for SDX-L2 repository
+  stat:
+    path: ~/onos/apps/sdxl2
+  register: sdxl2_repo
+  become_user: sdn
+
+- name: Clone SDX-L2 repository
+  git:
+    repo: "{{ onos.apps.sdxl2.repository.url }}"
+    dest: ~/onos/apps/sdxl2
+    force: no
+  when: sdxl2_repo.stat.exists == False
+  become_user: sdn
+
+- name: Add SDX-L2 app to modules.defs
+  lineinfile:
+    path: /opt/onos-cluster-ansible/test1
+    # Replace after last occurrence
+    regexp: "'(\\/\\/apps\\/(.*))',"
+    backrefs: yes
+#    insertafter: 'ONOS_APPS = \['
+    line: "    '\\1',\n    '//apps/sdx-l2:onos-apps-sdx-l2-oar',"
+

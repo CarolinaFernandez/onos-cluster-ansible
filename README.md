@@ -13,22 +13,28 @@ The final structure must be similar to the one below. Copy the `all.tpl` and `ho
 lues.
 
 ```bash
-+--- .gitignore
-+--- call.bash
-+--- inventories
-|   +--- production
-|   |   +--- group_vars
-|   |   |   +--- all
-|   |   |   +--- all.tpl
-|   |   +--- hosts
-|   |   +--- hosts.tpl
-+--- README.md
-+--- roles
-|   +--- common
-|   |   +--- tasks
-|   |   |   +--- create-sdn-user.yml
-|   |   |   +--- install-prereqs.yml
-+--- site.yml
+.
+├── ansible.cfg
+├── call.bash
+├── inventories
+│   └── production
+│       ├── group_vars
+│       │   ├── all
+│       │   └── all.tpl
+│       ├── hosts
+│       └── hosts.tpl
+├── README.md
+├── roles
+│   └── common
+│       └── tasks
+│           ├── create-sdn-user.yml
+│           ├── install-prereqs.yml
+│           ├── netcfg-controllers.yml
+│           ├── netcfg-hosts.yml
+│           ├── onos-git-sources.yml
+│           ├── onos-setup-cluster.yml
+│           └── sdxl2-git-sources.yml
+└── site.yml
 ```
 
 ## Running the script
@@ -59,4 +65,4 @@ Defaults        env_keep="no_proxy http_proxy https_proxy"
 
 ### Issue in deployment tasks
 
-Try replicating the step manually and run again the main bash file. For instance, the task installing Java8 will fail since you need to explicitly accept its license.
+Try replicating the step manually and run again the main bash file. For instance, the task installing Java8 may fail since you need to explicitly accept its license.

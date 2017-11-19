@@ -1,0 +1,33 @@
+# Define networking interfaces for controllers
+---
+
+#-  debug:
+#     msg: "Iface: {{ name }}, IP: {{ ip }}"
+#   when: name | search("eth")
+#   vars:
+#     name: "{{ iface | regex_replace(\"{(.*): u'(.*)'}\", \"\\1\") }}"
+#     ip: "{{ iface | regex_replace(\"{(.*): u'(.*)'}\", \"\\2\") }}"
+#     iface: "{{ item.1 }}"
+###    # Filter addresses in list to just have the IP value
+####   ip: "{{ item.value.ip.ctrl | regex_replace('(.*)\/(.*)', '\\1') | regex_replace('^\\[u(.*)\\](.*)$', '\\1') | regex_replace(\"'\") }}"
+###    oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
+###    ip: "{{ item.value.ip.ctrl | regex_replace('(.*)\/(.*)', '\\1') }}"
+##     ips: "{{ item.value.ip }}"
+#   with_subelements: 
+#     - "{{ onos.controllers }}"
+#     - ip
+
+- name: Configure data plane interfaces in controllers
+  nmcli:
+    ifname: "{{ name }}"
+    ip4: "{{ ip }}"
+    state: present
+    when: name | search("eth")
+    vars:
+      name: "{{ iface | regex_replace(\"{(.*): u'(.*)'}\", \"\\1\") }}"
+      # Filter addresses in list to just have the IP value
+      ip: "{{ iface | regex_replace(\"{(.*): u'(.*)'}\", \"\\2\") }}"
+      iface: "{{ item.1 }}"
+   with_subelements: 
+     - "{{ onos.controllers }}"
+     - ip

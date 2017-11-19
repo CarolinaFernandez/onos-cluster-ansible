@@ -2,6 +2,13 @@
 ---
 
 - block:
+  # Skip Java installation if already there
+  - name: Check Java installation
+    shell: command -v java
+    ignore_errors: True
+    changed_when: False
+    register: check_java
+
   - name: Add webupd8team PPA to sources
     lineinfile:
       path: /etc/apt/sources.list.d/webupd8team-java.list
@@ -12,42 +19,43 @@
       - { regexp: "^deb http", line: "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" }
       - { regexp: "^deb-src http", line: "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" }
     become: yes
+    when: ansible_distribution == "Ubuntu" and check_java.rc > 0
 
   - name: Add webupd8team PPA
     apt_key:
       id=0xC2518248EEA14886
       keyserver=keyserver.ubuntu.com:80
       state=present
-  become: yes
-  when: ansible_distribution == "Ubuntu"
+    become: yes
+    when: ansible_distribution == "Ubuntu" and check_java.rc > 0
 
-#- name: Add webupd8team PPA
-#  command: apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+  - name: Update cache
+    apt:
+      update_cache: yes
+    become: yes
+    when: check_java.rc > 0
 
-- name: Update cache
-  apt:
-    update_cache: yes
-  become: yes
+  # Note: not working. Consider installing and accepting license manually
+  # Undo: echo unregister shared/accepted-oracle-license-v1-1 | debconf-communicate oracle-java8-installer
+  - name: Accept Java 8 License
+    debconf:
+      name: oracle-java8-installer
+      question: shared/accepted-oracle-license-v1-1
+      unseen: false
+      value: true
+      vtype: select
+    become: yes
+    when: check_java.rc > 0
 
-# Note: not working. Consider installing and accepting license manually
-# Undo: echo unregister shared/accepted-oracle-license-v1-1 | debconf-communicate oracle-java8-installer
-- name: Accept Java 8 License
-  debconf:
-    name: oracle-java8-installer
-    question: shared/accepted-oracle-license-v1-1
-    value: true
-    vtype: select
-    unseen: false
-  become: yes
-
-- name: Install Oracle Java 8 and set as default
-  apt:
-    name={{item}} state=latest
-    update_cache=yes
-  with_items:
-    - oracle-java8-installer
-    - oracle-java8-set-default
-  become: yes
+  - name: Install Oracle Java 8 and set as default
+    apt:
+      name={{item}} state=latest
+      update_cache=yes
+    with_items:
+      - oracle-java8-installer
+      - oracle-java8-set-default
+    become: yes
+    when: check_java.rc > 0
 
 - name: Install other ONOS dependencies
   apt:

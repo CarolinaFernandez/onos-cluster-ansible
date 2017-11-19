@@ -1,25 +1,42 @@
+# Main playbook
 ---
-
-#- name: Install pre-requirements
-#  become: yes
-#  remote_user: deployment.user.id
-#  become_user: root
-#  become_method: sudo
-#  hosts: controllers
-#  tasks:
-#    - import_tasks: roles/common/tasks/install-prereqs.yml
-
-- name: Set-up user
+- name: Install prerequisites and user
   become: yes
   remote_user: deployment.user.id
   become_user: root
   become_method: sudo
   hosts: controllers
   tasks:
+    - import_tasks: roles/common/tasks/install-prereqs.yml
     - import_tasks: roles/common/tasks/create-sdn-user.yml
+
+- name: Network configuration for controllers
+  hosts: controllers
+  remote_user: deployment.user.id
+  tasks:
+    - import_tasks: roles/common/tasks/netcfg-controllers.yml
+
+- name: Network configuration for hosts
+  hosts: clients
+  remote_user: deployment.user.id
+  tasks:
+    - import_tasks: roles/common/tasks/netcfg-hosts.yml
 
 - name: Clone ONOS repo
   hosts: controllers[0]
   become_user: sdn
   tasks:
     - import_tasks: roles/common/tasks/onos-git-sources.yml
+
+- name: Clone SDXL2 repo
+  hosts: controllers[0]
+  become_user: sdn
+  tasks:
+    - import_tasks: roles/common/tasks/sdxl2-git-sources.yml
+
+- name: Set-up ONOS cluster
+  hosts: hosts
+  remote_user: sdn
+  tasks:
+    - import_tasks: roles/common/tasks/onos-setup-cluster.yml
+
