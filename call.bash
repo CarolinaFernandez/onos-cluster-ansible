@@ -15,7 +15,13 @@ install_packages() {
 
 install_apt_packages() {
   packages="sshpass python-pip"
-  install_packages "sudo apt install" "sudo dpkg -l" "$packages"
+  install_packages "sudo apt install -y" "sudo dpkg -l" "$packages"
+  return 0
+}
+
+install_pip_packages() {
+  packages="dbus-python"
+  install_packages "pip install" "pip freeze" "$packages"
   return 0
 }
 
@@ -77,6 +83,7 @@ exit_on_error() {
 header "Installing required packages locally..."
 install_apt_packages || exit_on_error "Cannot install expected packages" $?
 install_ansible_package || exit_on_error "Cannot install Ansible" $?
+#install_pip_packages || exit_on_error "Cannot install expected packages" $?
 
 header "Setting up key for deployment..."
 # Set-up key for deployment

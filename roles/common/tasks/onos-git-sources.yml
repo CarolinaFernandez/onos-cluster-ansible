@@ -32,7 +32,7 @@
 
 - name: Add scripts for SSH agent
   blockinfile:
-    dest: ~/.bashrc
+    dest: ~/.profile
     state: present
     content: |
       
@@ -87,34 +87,3 @@
     generate_ssh_key: yes
   become_user: sdn
 
-- name: Replace OCX IPs in environment
-  replace:
-    path: ~/onos/tools/test/cells/local
-    # Match only on specific line (e.g., OC1="..." will match with var onos1)
-    regexp: '(.*)export OC{{ oc }}="(.*)"+(.*)'
-    replace: '\1export OC{{ oc }}="{{ ip }}\3"'
-#  when: name | search("ctrl")
-  vars:
-    # Filter addresses in list to just have the IP value
-#    name: "{{ ip | regex_replace(\"{(.*): u'(.*)'}\", \"\\1\") }}"
-    oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
-    ip: "{{ iface | regex_replace(\"(.*)\\/(.*)\", \"\\1\") }}"
-    iface: "{{ item.value.ip | regex_replace(\"(.*)u'ctrl': u'(.*?)'}, {(.*)\", \"\\2\") }}"
-  with_dict:
-    "{{ onos.controllers }}"
-  become_user: sdn
-
-- name: Replace ONOS_NIC IP range in environment
-  replace:
-    path: ~/onos/tools/test/cells/local
-    # Match only on specific line (e.g., OC1="..." will match with var onos1)
-    regexp: '(.*)export ONOS_NIC=(?:")*(.*)(?:")*(.*)'
-    replace: '\1export ONOS_NIC={{ subnet }}\3'
-  vars:
-    # Filter subnet from specific ctrl IP
-    subnet: "{{ ip | regex_replace('\\b(\\d{1,3}.)(\\d{1,3}.)(\\d{1,3}.)(\\d{1,3})\\b', '\\1\\2\\3*') }}"
-    ip: "{{ iface | regex_replace(\"(.*)\\/(.*)\", \"\\1\") }}"
-    iface: "{{ item | regex_replace(\"(.*)u'ctrl': u'(.*?)'}, {(.*)\", \"\\2\") }}"
-  with_dict:
-    "{{ onos.controllers.onos1 }}"
-  become_user: sdn

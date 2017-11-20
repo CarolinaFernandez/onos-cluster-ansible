@@ -16,11 +16,11 @@
   tasks:
     - import_tasks: roles/common/tasks/netcfg-controllers.yml
 
-- name: Network configuration for hosts
+- name: Network configuration for clients
   hosts: clients
   remote_user: deployment.user.id
   tasks:
-    - import_tasks: roles/common/tasks/netcfg-hosts.yml
+    - import_tasks: roles/common/tasks/netcfg-clients.yml
 
 - name: Clone ONOS repo
   hosts: controllers[0]

@@ -17,17 +17,18 @@
 #     - "{{ onos.controllers }}"
 #     - ip
 
-- name: Configure data plane interfaces in controllers
+- name: Configure data plane interfaces per controller
   nmcli:
-    ifname: "{{ name }}"
+    conn_name: "{{ name }}"
+    type: ethernet
     ip4: "{{ ip }}"
     state: present
-    when: name | search("eth")
-    vars:
-      name: "{{ iface | regex_replace(\"{(.*): u'(.*)'}\", \"\\1\") }}"
-      # Filter addresses in list to just have the IP value
-      ip: "{{ iface | regex_replace(\"{(.*): u'(.*)'}\", \"\\2\") }}"
-      iface: "{{ item.1 }}"
-   with_subelements: 
-     - "{{ onos.controllers }}"
-     - ip
+  when: name | search("eth")
+  vars:
+    name: "{{ iface | regex_replace(\"{(.*): u'(.*)'}\", \"\\1\") }}"
+    # Filter addresses in list to just have the IP value
+    ip: "{{ iface | regex_replace(\"{(.*): u'(.*)'}\", \"\\2\") }}"
+    iface: "{{ item.1 }}"
+  with_subelements:
+    - "{{ onos.controllers }}"
+    - ip

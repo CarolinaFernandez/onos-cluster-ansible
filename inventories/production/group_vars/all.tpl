@@ -25,6 +25,12 @@ onos:
       ip:
         - ctrl: %onos_oc3_ctrl_ip%/%netmask%
         - eth1: %onos_oc3_data1_ip%/%netmask%
+  # Extend with more clients/end-to-end hosts and interfaces as needed
+  clients:
+    host1:
+      ip:
+        - eth1: %host1_data1_ip%/%netmask%
+        - eth2: %host1_data2_ip%/%netmask%
   apps:
     # Other apps may be added (specific playbooks shall be added)
     sdxl2:

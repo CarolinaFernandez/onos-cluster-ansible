@@ -8,63 +8,72 @@
 
 - name: Create group for user running ONOS
   group:
-    name: "{{vars.onos.group.id}}"
+    name: "{{ onos.group.id }}"
     state: present
+  become: yes
 
 - name: Create user to run ONOS and extend/append its groups with the above
   user:
     name: sdn
     shell: /bin/bash
-    groups: "{{vars.onos.group.id}}"
+    groups: "{{ onos.group.id }}"
     append: yes
+  become: yes
 
 - name: Allow above group to have passwordless sudo
   lineinfile:
     dest: /etc/sudoers
     state: present
-    regexp: "^%{{vars.onos.group.id}}"
-    line: "%{{vars.onos.group.id}} ALL=(ALL) NOPASSWD: ALL"
+    regexp: "^%{{ onos.group.id }}"
+    line: "%{{ onos.group.id }} ALL=(ALL) NOPASSWD: ALL"
     validate: "visudo -cf %s"
+  become: yes
 
 - name: Add sudoer user to above group
   user:
-    name: "{{vars.deployment.user.id}}"
-    groups: "{{vars.onos.group.id}}"
+    name: "{{ deployment.user.id }}"
+    groups: "{{ onos.group.id }}"
     append: yes
     state: present
     createhome: yes
+  become: yes
 
 - name: Ensure SSH folder present for deployment user
   file:
-    path: "/home/{{vars.deployment.user.id}}/.ssh"
+    path: "/home/{{ deployment.user.id }}/.ssh"
     state: directory
+    owner: "{{ deployment.user.id }}"
+    group: "{{ deployment.user.id }}"
+  become: yes
 
-- name: Copy SSH key
-  copy:
-    src: "~/{{vars.deployment.user.key}}.pub"
-    dest: "/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"   
-    owner: "{{vars.deployment.user.id}}"
-    group: "{{vars.deployment.user.id}}"
-    force: true
-    mode: 0644
+#- name: Copy SSH public key
+#  copy:
+#    src: "~/{{ deployment.user.key }}.pub"
+#    dest: "/home/{{ deployment.user.id }}/.ssh/id_rsa_{{ deployment.user.id }}.pub"   
+#    owner: "{{ deployment.user.id }}"
+#    group: "{{ deployment.user.id }}"
+#    force: true
+#    mode: 0644
 
 - name: Ensure SSH authorized_keys present
   file:
-    path: "/home/{{vars.deployment.user.id}}/.ssh/authorized_keys"
+    path: "/home/{{ deployment.user.id }}/.ssh/authorized_keys"
     state: touch
-    owner: "{{vars.deployment.user.id}}"
+    owner: "{{ deployment.user.id }}"
+    group: "{{ deployment.user.id }}"
+    mode: 0644
 
 #- name: Set up authorised keys for the deployer user
 #  shell: |
-#    cat "/home/{{vars.deployment.user.id}}/.ssh/id_rsa_{{vars.deployment.user.id}}.pub" >> /home/{{vars.deployment.user.id}}/.ssh/authorized_keys
+#    cat "/home/{{ deployment.user.id }}/.ssh/id_rsa_{{ deployment.user.id }}.pub" >> /home/{{ deployment.user.id }}/.ssh/authorized_keys
 
 - name: Set up authorised keys for the deployer user
   authorized_key:
-    user: "{{vars.deployment.user.id}}"
+    state: present
+    user: "{{ deployment.user.id }}"
     key: "{{ item }}"
-#   key: {{ lookup('file', item) }}
-#  with_fileglob:
-#    - "~/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"
-  with_lines:
-    - "cat ~/.ssh/id_rsa_{{vars.deployment.user.id}}.pub"
-  become_user: "{{vars.deployment.user.id}}"
+#  with_lines:
+#    - "cat ~/.ssh/id_rsa_{{ deployment.user.id }}.pub"
+  with_file:
+    - "~/.ssh/id_rsa_onos_cluster.pub"
+  become_user: "{{ deployment.user.id }}"
