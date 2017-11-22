@@ -44,7 +44,7 @@ The final structure must be similar to the one below.
 └── site.yml
 ```
 
-Thus, copy the `all.tpl` and `hosts.tpl` into `all` and `hosts`, respectively; and fill them with appropriate values.
+Thus, copy the `all.tpl` and `hosts.tpl` into `all` and `hosts`, respectively; and replace all tags between `%` with appropriate values *(do not modify the templated values, between `{` and `}`)*.
 
 **Note**: the management IP of each node defined in `all` should match the IP of such node in `hosts`. This is required to perform matching in actions related to network configuration.
 

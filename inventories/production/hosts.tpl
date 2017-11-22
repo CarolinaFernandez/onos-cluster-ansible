@@ -1,8 +1,9 @@
 [all:vars]
 ansible_connection=ssh
-ansible_port=22
-ansible_user=%remote_user_id%
-ansible_ssh_pass=%remote_user_pass%
+ansible_port="{{ deployment.port }}"
+ansible_user="{{ deployment.user.id }}"
+ansible_ssh_pass="{{ deployment.user.pass }}"
+private_key_file="~/{{ deployment.user.key }}"
 
 [controllers]
 %remote_controller_1%
