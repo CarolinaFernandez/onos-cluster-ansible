@@ -1,27 +1,68 @@
 # Set-up ONOS cluster
 ---
 
-- name: Build ONOS repository sources
-  shell: onos-buck build onos-local --no-cache
-  args:
-    chdir: ~/onos
-  become_user: sdn
+#- name: Copy ONOS scripts
+#  copy:
+#    src: "scripts/"
+#    dest: "/home/{{ onos.user.id }}/onos-scripts"
+##    directory_mode: true
+#    owner: "{{ onos.user.id }}"
+#    group: "{{ onos.group.id }}"
+#    mode: 0644
+#  become: yes
+
+## To do: double check symlinks do not affect other than performance
+#- name: Build ONOS repository sources
+#  shell: tools/build/onos-buck build onos-local --no-cache
+#  args:
+#    chdir: ~/onos
+#  ignore_errors: True
+#  become_user: "{{ onos.user.id }}"
+#  become: yes
+
+#- name: Insert SSH keys on ONOS cluster instances
+#  shell: "~/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
+#  vars:
+#    # Filter addresses in list to just have the IP value
+#    oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
+#  with_dict:
+#    "{{ onos.controllers }}"
+#  become_user: "{{ onos.user.id }}"
+#  become: yes
 
 - name: Insert SSH keys on ONOS cluster instances
-  shell: "onos-push-keys $OC{{ oc }}"
+  shell: "/home/{{ onos.user.id }}/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
+#  script: "/bin/bash onos-push-keys $OC{{ oc }}"
+#  shell: "/usr/bin/sudo -iu {{ onos.user.id }} && . /home/sdn/onos/tools/dev/bash_profile && /home/sdn/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
+#  args:
+#    chdir: "/home/{{ onos.user.id }}/onos-scripts"
   vars:
     # Filter addresses in list to just have the IP value
     oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
-#    ip: "{{ item.value.ip.ctrl }}"
+  environment:
+    LD_LIBRARY_PATH: /usr/local/lib
   with_dict:
     "{{ onos.controllers }}"
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
+  become: yes
 
-- name: Install prerequisites
-  shell: stc prerequisites
-  become_user: sdn
+- block:
+  # Prepare and run cluster when needed
+  - name: Check cluster status
+    shell: netstat -apen | grep 6653 | grep LISTEN | wc -l
+    ignore_errors: True
+    register: running_onos
+    become_user: "{{ onos.user.id }}"
+    become: yes
 
-- name: Run the cluster
-  shell: stc setup
-  become_user: sdn
+  - name: Install prerequisites
+    shell: . ~/.bashrc && ~/onos/tools/test/bin/stc prerequisites
+    become_user: "{{ onos.user.id }}"
+    become: yes
+    when: running_onos.stdout | int < 1
 
+  - name: Run the cluster
+    shell: . ~/.bashrc && ~/onos/tools/test/bin/stc setup
+    become_user: "{{ onos.user.id }}"
+    become: yes
+    when: running_onos.stdout | int < 1

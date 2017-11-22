@@ -3,36 +3,48 @@
 
 - name: Check for SDX-L2 repository
   stat:
-    path: ~/onos/apps/sdxl2
+    path: /home/{{ onos.user.id }}/onos/apps/sdx-l2
   register: sdxl2_repo
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 
 - name: Clone SDX-L2 repository
   git:
     repo: "{{ onos.apps.sdxl2.repository.url }}"
-    dest: ~/onos/apps/sdxl2
+    dest: /home/{{ onos.user.id }}/onos/apps/sdx-l2
     force: no
   when: sdxl2_repo.stat.exists == False
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 
 - name: Ensure SDX-L2 cell exists
   file:
-    path: ~/onos/tools/test/cells/sdxl2
+    path: /home/{{ onos.user.id }}/onos/tools/test/cells/sdxl2
     state: touch
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
+  become: yes
+
+#- name: Add SDX-L2 app to modules.defs
+#  lineinfile:
+#    path: /home/{{ onos.user.id }}/onos/modules.defs
+#    # Replace after last occurrence
+#    regexp: "'(\\/\\/apps\\/(.*))',"
+#    backrefs: yes
+#    line: "    '\\1',\n    '//apps/sdx-l2:onos-apps-sdx-l2-oar',"
 
 - name: Add SDX-L2 app to modules.defs
-  lineinfile:
-    path: /opt/onos-cluster-ansible/test1
-    # Replace after last occurrence
-    regexp: "'(\\/\\/apps\\/(.*))',"
-    backrefs: yes
-#    insertafter: 'ONOS_APPS = \['
-    line: "    '\\1',\n    '//apps/sdx-l2:onos-apps-sdx-l2-oar',"
+  blockinfile:
+    path: /home/{{ onos.user.id }}/onos/modules.defs
+    insertafter: '^APPS = \['
+    content: |
+    
+        APP_SDXL2 = [
+            '//apps/sdx-l2:onos-apps-sdx-l2-oar'
+        ]
+        
+        APPS = APPS + APP_SDXL2
 
 - name: Insert SDX-L2 cell contents
   blockinfile:
-    dest: ~/onos/tools/test/cells/sdxl2
+    dest: /home/{{ onos.user.id }}/onos/tools/test/cells/sdxl2
     state: present
     content: |
       # SDXL2 deployment
@@ -41,36 +53,37 @@
       export OC2=""
       export OC3=""
       export ONOS_APPS="drivers,openflow,drivers.corsa"
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
+  become: yes
 
 - name: Replace OCX IPs in environment
   replace:
-    path: ~/onos/tools/test/cells/sdxl2
+    path: /home/{{ onos.user.id }}/onos/tools/test/cells/sdxl2
     # Match only on specific line (e.g., OC1="..." will match with var onos1)
     regexp: '(.*)export OC{{ oc }}=(?:")(.*)(?:")+(.*)'
     replace: '\1export OC{{ oc }}="{{ ip }}\3"'
-#  when: name | search("ctrl")
   vars:
     # Filter addresses in list to just have the IP value
-#    name: "{{ ip | regex_replace(\"{(.*): u'(.*)'}\", \"\\1\") }}"
     oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
-    ip: "{{ iface | regex_replace(\"(.*)\\/(.*)\", \"\\1\") }}"
-    iface: "{{ item.value.ip | regex_replace(\"(.*)u'ctrl': u'(.*?)'}, {(.*)\", \"\\2\") }}"
+    ip: "{{ iface | ip_strip_subnet }}"
+    iface: "{{ item.value.ip | get_dict_value_for_key('mgmt') }}"
   with_dict:
     "{{ onos.controllers }}"
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
+  become: yes
 
 - name: Replace ONOS_NIC IP range in environment
   replace:
-    path: ~/onos/tools/test/cells/sdxl2
+    path: /home/{{ onos.user.id }}/onos/tools/test/cells/sdxl2
     # Match only on specific line (e.g., OC1="..." will match with var onos1)
     regexp: '(.*)export ONOS_NIC=(?:")*(.*)(?:")*(.*)'
     replace: '\1export ONOS_NIC="{{ subnet }}"\3'
   vars:
     # Filter subnet from specific ctrl IP
-    subnet: "{{ ip | regex_replace('\\b(\\d{1,3}.)(\\d{1,3}.)(\\d{1,3}.)(\\d{1,3})\\b', '\\1\\2\\3*') }}"
-    ip: "{{ iface | regex_replace(\"(.*)\\/(.*)\", \"\\1\") }}"
-    iface: "{{ item | regex_replace(\"(.*)u'ctrl': u'(.*?)'}, {(.*)\", \"\\2\") }}"
+    subnet: "{{ iface_ip | ip_compute_subnet }}"
+    iface_ip: "{{ iface_ip_net | ip_strip_subnet }}"
+    iface_ip_net: "{{ item.value | get_dict_value_for_key('mgmt') }}"
   with_dict:
     "{{ onos.controllers.onos1 }}"
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
+  become: yes

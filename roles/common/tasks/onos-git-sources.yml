@@ -5,22 +5,22 @@
   stat:
     path: ~/onos
   register: onos_repo
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 
 - name: Clone ONOS repository
   git:
     repo: https://gerrit.onosproject.org/onos
     dest: ~/onos
-    version: onos-1.11
+    version: "{{ onos.version }}"
     force: no
   when: onos_repo.stat.exists == False
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 
 - name: Ensure .bashrc exists
   file:
     path: ~/.bashrc
     state: touch
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 
 - name: Source ONOS dev's bash_profile
   lineinfile:
@@ -28,7 +28,7 @@
     state: present
     regexp: "^. ~/onos/tools/dev/bash_profile"
     line: ". ~/onos/tools/dev/bash_profile"
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 
 - name: Add scripts for SSH agent
   blockinfile:
@@ -56,34 +56,34 @@
       else
           start_agent;
       fi
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 
 - name: Source .bashrc
   shell: . ~/.bashrc
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 
 - name: Replace SSH agent in "onos-wait-for-start"
   replace:
     path: ~/onos/tools/test/bin/onos-wait-for-start
     regexp: '(.*)ssh -t -t \$remote "(.*)'
     replace: '\1ssh -t -t -A $remote "\2'
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 
 #- name: Generate private SSH key for ONOS cluster (deploying) instance
 #  openssl_privatekey:
 #    path: ~/.ssh/id_rsa_test_onos_cluster
 #    type: RSA
-#  become_user: sdn
+#  become_user: "{{ onos.user.id }}"
 
 #- name: Generate public SSH key for ONOS cluster (deploying) instance
 #  openssl_publickey:
 #    path: ~/.ssh/id_rsa_test_onos_cluster.pub
 #    privatekey_path: ~/.ssh/id_rsa_test_onos_cluster
-#  become_user: sdn
+#  become_user: "{{ onos.user.id }}"
 
 - name: Generate SSH keys for ONOS cluster (deploying) instance
   user:
-    name: sdn
+    name: "{{ onos.user.id }}"
     generate_ssh_key: yes
-  become_user: sdn
+  become_user: "{{ onos.user.id }}"
 

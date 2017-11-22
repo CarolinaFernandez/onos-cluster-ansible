@@ -1,0 +1,100 @@
+# Create ONOS user
+---
+
+#- name: Include variables
+#  include_vars:
+#    file: ../../../inventories/production/group_vars/all
+#    name: vars
+
+- name: Create group for user running ONOS
+  group:
+    name: "{{ onos.group.id }}"
+    state: present
+  become: yes
+
+- name: Create user to run ONOS and extend/append its groups with the above
+  user:
+    name: "{{ onos.user.id }}"
+    shell: /bin/bash
+    groups: "{{ onos.user.id }},{{ onos.group.id }},sudo"
+    append: yes
+  become: yes
+
+- name: Allow ONOS group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: "^%{{ onos.group.id }}"
+    line: "%{{ onos.group.id }} ALL=(ALL) NOPASSWD: ALL"
+    validate: "visudo -cf %s"
+  become: yes
+
+- name: Add deployment user in ONOS group
+  user:
+    name: "{{ deployment.user.id }}"
+    groups: "{{ onos.group.id }}"
+    append: yes
+    state: present
+    createhome: yes
+  become: yes
+
+- name: Ensure SSH folder present for the deployment user
+  file:
+    path: "/home/{{ deployment.user.id }}/.ssh"
+    state: directory
+    owner: "{{ deployment.user.id }}"
+    group: "{{ deployment.user.id }}"
+  become: yes
+
+- name: Ensure SSH authorized_keys present for the deployment user
+  file:
+    path: "/home/{{ deployment.user.id }}/.ssh/authorized_keys"
+    state: touch
+    owner: "{{ deployment.user.id }}"
+    group: "{{ deployment.user.id }}"
+    mode: 0644
+
+- name: Set up authorised keys for the deployment user
+  authorized_key:
+    state: present
+    user: "{{ deployment.user.id }}"
+    key: "{{ item }}"
+  with_file:
+    - "~/.ssh/id_rsa_onos_cluster.pub"
+#  with_lines:
+#    - "cat ~/.ssh/id_rsa_{{ deployment.user.id }}.pub"
+  become_user: "{{ deployment.user.id }}"
+  become: yes
+
+- name: Ensure SSH folder present for the ONOS user
+  file:
+    path: "/home/{{ onos.user.id }}/.ssh"
+    state: directory
+    owner: "{{ onos.user.id }}"
+    group: "{{ onos.group.id }}"
+  become: yes
+
+- name: Ensure SSH authorized_keys present for the ONOS user
+  file:
+    path: "/home/{{ onos.user.id }}/.ssh/authorized_keys"
+    state: touch
+    owner: "{{ onos.user.id }}"
+    group: "{{ onos.group.id }}"
+    mode: 0644
+
+- name: Copy SSH public key for the ONOS user
+  copy:
+    src: "~/.ssh/id_rsa_onos_cluster.pub"
+    dest: "/home/{{ onos.user.id }}/.ssh/id_rsa_onos_cluster.pub"   
+    owner: "{{ onos.user.id }}"
+    group: "{{ onos.group.id }}"
+    force: true
+    mode: 0644
+  become: yes
+
+- name: Set up authorised keys for the ONOS user
+  shell: |
+    key="/home/{{ onos.user.id }}/.ssh/id_rsa_onos_cluster.pub"
+    auth_key_f="/home/{{ onos.user.id }}/.ssh/authorized_keys"
+    grep -q "$(cat $key)" $auth_key_f || echo "$(cat $key)" >> $auth_key_f
+  become: yes

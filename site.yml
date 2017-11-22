@@ -1,42 +1,47 @@
 # Main playbook
 ---
 - name: Install prerequisites and user
-  become: yes
   remote_user: deployment.user.id
+  become: yes
   become_user: root
   become_method: sudo
   hosts: controllers
   tasks:
-    - import_tasks: roles/common/tasks/install-prereqs.yml
-    - import_tasks: roles/common/tasks/create-sdn-user.yml
+    - import_tasks: roles/packages/tasks/install-prereqs.yml
+    - import_tasks: roles/user/tasks/create-onos-user.yml
 
 - name: Network configuration for controllers
   hosts: controllers
   remote_user: deployment.user.id
   tasks:
-    - import_tasks: roles/common/tasks/netcfg-controllers.yml
+    - import_tasks: roles/network/tasks/netcfg-controllers.yml
 
 - name: Network configuration for clients
   hosts: clients
   remote_user: deployment.user.id
   tasks:
-    - import_tasks: roles/common/tasks/netcfg-clients.yml
+    - import_tasks: roles/network/tasks/netcfg-clients.yml
 
 - name: Clone ONOS repo
   hosts: controllers[0]
-  become_user: sdn
+  vars:
+    ansible_user: "{{ onos.user.id }}"
+    ansible_ssh_pass: "{{ onos.user.pass }}"
   tasks:
     - import_tasks: roles/common/tasks/onos-git-sources.yml
 
 - name: Clone SDXL2 repo
   hosts: controllers[0]
-  become_user: sdn
+  vars:
+    ansible_user: "{{ onos.user.id }}"
+    ansible_ssh_pass: "{{ onos.user.pass }}"
   tasks:
     - import_tasks: roles/common/tasks/sdxl2-git-sources.yml
 
 - name: Set-up ONOS cluster
-  hosts: hosts
-  remote_user: sdn
+  hosts: controllers[0]
+  vars:
+    ansible_user: "{{ onos.user.id }}"
+    ansible_ssh_pass: "{{ onos.user.pass }}"
   tasks:
     - import_tasks: roles/common/tasks/onos-setup-cluster.yml
-
