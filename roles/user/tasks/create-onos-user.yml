@@ -15,6 +15,7 @@
 - name: Create user to run ONOS and extend/append its groups with the above
   user:
     name: "{{ onos.user.id }}"
+    password: "{{ onos.user.pass | password_hash(\"sha512\") }}"
     shell: /bin/bash
     groups: "{{ onos.group.id }},sudo"
     append: yes
@@ -97,4 +98,6 @@
     key="/home/{{ onos.user.id }}/.ssh/id_rsa_onos_cluster.pub"
     auth_key_f="/home/{{ onos.user.id }}/.ssh/authorized_keys"
     grep -q "$(cat $key)" $auth_key_f || echo "$(cat $key)" >> $auth_key_f
+  args:
+    executable: /bin/bash
   become: yes
