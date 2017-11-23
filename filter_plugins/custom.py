@@ -9,6 +9,7 @@ class FilterModule(object):
             "get_dict_key": self.get_dict_key,
             "get_dict_value": self.get_dict_value,
             "get_dict_value_for_key": self.get_dict_value_for_key,
+            "iface_exists": self.iface_exists,
             "iface_in_target_node": self.iface_in_target_node,
             "ip_compute_subnet": self.ip_compute_subnet,
             "ip_strip_subnet": self.ip_strip_subnet,
@@ -33,6 +34,9 @@ class FilterModule(object):
         if isinstance(data, list):
             data = data[0]
         return self.match_get_nth_group(reg_exp, data, 1)
+
+    def iface_exists(self, data, hostvars):
+        return data in hostvars["ansible_interfaces"]
 
     def iface_in_target_node(self, dict_nodes, target_ip, iface_ip):
         for node, ips in dict_nodes.iteritems():

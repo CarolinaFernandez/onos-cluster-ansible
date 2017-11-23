@@ -1,45 +1,13 @@
 # Define networking interfaces for end-to-end hosts
 ---
 
-#- debug:
-#    msg: "Host: {{ host }}, current host: {{ target }}, iface_ip: {{ iface_ip }}"
-#  when: iface_in_target_node
-#  vars:
-#    iface_in_target_node: "{{ onos.clients | iface_in_target_node(target, iface_ip) }}"
-#    target: "{{ inventory_hostname | ip_strip_subnet }}"
-#    iface_ip: "{{ iface_ip_net | ip_strip_subnet }}"
-#    iface_ip_net: "{{ item.value.ip | get_dict_value_for_key('mgmt') }}"
-#    host: "{{ item.key }}"
-#  with_dict:
-#    "{{ onos.clients }}"
-
-- name: Define name per client
-  hostname:
-    name: "{{ host }}"
-  when: iface_in_target_node
+- import_tasks: host-config-name.yml
   vars:
-    iface_in_target_node: "{{ onos.clients | iface_in_target_node(target, iface_ip) }}"
-    target: "{{ inventory_hostname | ip_strip_subnet }}"
-    iface_ip: "{{ iface_ip_net | ip_strip_subnet }}"
-    iface_ip_net: "{{ item.value.ip | get_dict_value_for_key('mgmt') }}"
-    host: "{{ item.key }}"
-  with_dict:
-    "{{ onos.clients }}"
-  become: yes
+    type: "client"
+    nodes: "{{ onos.clients }}"
 
-# Not using nmcli tasks as these depend on failing package ("dbus-python" bindings)
-- name: Configure data plane interfaces per client
-  shell: |
-    ip addr flush dev {{ iface_name }} && ip addr add {{ iface_ip_net }} dev {{ iface_name }}
-  when: (iface_name | search("eth")) and (iface_in_target_node)
+- import_tasks: iface-config-ip.yml
   vars:
-    iface_in_target_node: "{{ onos.clients | iface_in_target_node(target, iface_ip) }}"
-    target: "{{ inventory_hostname | ip_strip_subnet }}"
-    iface_name: "{{ item.1 | get_dict_key }}"
-    iface_ip: "{{ iface_ip_net | ip_strip_subnet }}"
-    iface_ip_net: "{{ item.1 | get_dict_value }}"
-    ifaces: "{{ item }}"
-  with_subelements:
-    - "{{ onos.clients }}"
-    - ip
-  become: yes
+    type: "client"
+    nodes: "{{ onos.clients }}"
+

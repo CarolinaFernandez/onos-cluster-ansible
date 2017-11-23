@@ -1,0 +1,20 @@
+# Define hostname
+---
+
+# Required values:
+#  - nodes: dictionary with interface and ip per host
+#  - type: kind of nodes
+
+- name: Define name per {{ type }}
+  hostname:
+    name: "{{ hostname }}"
+  when: iface_in_target_node
+  vars:
+    iface_in_target_node: "{{ onos.clients | iface_in_target_node(target, iface_ip) }}"
+    target: "{{ inventory_hostname | ip_strip_subnet }}"
+    iface_ip: "{{ iface_ip_net | ip_strip_subnet }}"
+    iface_ip_net: "{{ item.value.ip | get_dict_value_for_key('mgmt') }}"
+    hostname: "{{ item.key }}"
+  with_dict:
+    "{{ nodes }}"
+  become: yes
