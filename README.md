@@ -80,4 +80,4 @@ Defaults        env_keep="no_proxy http_proxy https_proxy"
 
 ### Issues in deployment tasks
 
-Try replicating the step manually and run again the main bash file. For instance, the task installing Java8 may fail since you need to explicitly accept its license; and commands requiring the environment variables will also fail.
+Try replicating the step manually and run again the main bash file. For instance, commands requiring the environment variables may fail.
