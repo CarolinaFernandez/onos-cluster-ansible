@@ -1,6 +1,7 @@
 # onos-cluster-ansible
 
 Set of Ansible scripts to automate the deployment of an ONOS cluster in production.
+These scripts have been tested with  Ansible [2.4](http://docs.ansible.com/ansible/2.4/index.html)
 
 ## Status
 Ongoing work. Issues when attempting `onos-push-keys`.

@@ -1,14 +1,14 @@
 # Install required packages
 ---
 
-- block:
-  # Skip Java installation if already there
-  - name: Check Java installation
-    shell: command -v java
-    ignore_errors: True
-    changed_when: False
-    register: check_java
+- name: Check Java installation
+  shell: command -v java
+  ignore_errors: True
+  changed_when: False
+  register: check_java
 
+# Skip Java installation if already there
+- block:
   - name: Add webupd8team PPA to sources
     lineinfile:
       path: /etc/apt/sources.list.d/webupd8team-java.list
@@ -19,7 +19,6 @@
       - { regexp: "^deb http", line: "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" }
       - { regexp: "^deb-src http", line: "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" }
     become: yes
-    when: ansible_distribution == "Ubuntu" and check_java.rc > 0
 
   - name: Add webupd8team PPA
     apt_key:
@@ -27,15 +26,13 @@
       id: 7B2C3B0889BF5709A105D03AC2518248EEA14886
       state: present
     become: yes
-    when: ansible_distribution == "Ubuntu" and check_java.rc > 0
 
   - name: Update cache
     apt:
       update_cache: yes
     become: yes
-    when: check_java.rc > 0
 
-#  - name: Accept Java 8 License
+#  - name: Accept Java 8 license
 #    debconf:
 #      name: oracle-java8-installer
 #      question: shared/accepted-oracle-license-v1-1
@@ -43,24 +40,37 @@
 #      value: true
 #      vtype: select
 #    become: yes
-#    when: check_java.rc > 0
 
   # Undo: echo unregister shared/accepted-oracle-license-v1-1 | debconf-communicate oracle-java8-installer
-  - name: Automatically select the Oracle License
+  - name: Automatically select the Oracle license
     shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
     become: yes
-    when: check_java.rc > 0
 
-  - name: Install Oracle Java 8 and set as default
+  - name: "Install Oracle Java {{ java_version }} and set as default"
     apt:
       name: "{{item}}"
       state: latest
       update_cache: yes
     with_items:
-      - oracle-java8-installer
-      - oracle-java8-set-default
+      - "oracle-java{{ java_version }}-installer"
+      - "oracle-java{{ java_version }}-set-default"
     become: yes
-    when: check_java.rc > 0
+  when: ansible_distribution == "Ubuntu" and check_java.rc > 0
+
+- name: Check Java version
+  shell: java -version 2>&1 | grep version | awk "{print $3}" | sed "s/\"//g"
+  args:
+    executable: /bin/bash
+  ignore_errors: True
+  changed_when: False
+  register: java_installed
+
+- name: "Verify Java version {{ java_version }} is installed"
+  assert:
+    that: "java_installed_v | version_compare(\"1.{{ java_version }}\", \">=\")" 
+    msg: "Installed Java version must be 1.{{ java_version }} (found: {{ java_installed_v }})"
+  vars:
+    java_installed_v: "{{ java_installed.stdout }}"
 
 - name: Install other ONOS dependencies
   apt:

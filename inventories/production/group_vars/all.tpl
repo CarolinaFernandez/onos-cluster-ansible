@@ -7,6 +7,8 @@ deployment:
     pass: %remote_deploy_user_pass%
     key: .ssh/id_rsa_onos_cluster
   port: 22
+ 
+java_version: 8
 
 onos:
   group:
