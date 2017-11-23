@@ -23,9 +23,9 @@
 
   - name: Add webupd8team PPA
     apt_key:
-      id=0xC2518248EEA14886
-      keyserver=keyserver.ubuntu.com:80
-      state=present
+      keyserver: hkp://keyserver.ubuntu.com:80
+      id: 7B2C3B0889BF5709A105D03AC2518248EEA14886
+      state: present
     become: yes
     when: ansible_distribution == "Ubuntu" and check_java.rc > 0
 
