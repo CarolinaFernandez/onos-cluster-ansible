@@ -16,7 +16,7 @@
   user:
     name: "{{ onos.user.id }}"
     shell: /bin/bash
-    groups: "{{ onos.user.id }},{{ onos.group.id }},sudo"
+    groups: "{{ onos.group.id }},sudo"
     append: yes
   become: yes
 
