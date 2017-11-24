@@ -78,4 +78,6 @@ Defaults        env_keep="no_proxy http_proxy https_proxy"
 
 ### Issues in deployment tasks
 
-Try replicating the step manually and run again the main bash file. For instance, the cluster setup may fail if the "stc" binary is corrupt, and under some circumstances, commands requiring the environment variables might fail.
+Try replicating the step manually and run again the main script.
+
+The cluster setup may fail for several reasons (the "stc" binary might be corrupt, there are conflicting files under /tmp from previous installation, under some circumstances environment variables may not be available, or even the latest repositories' commits may fail).
