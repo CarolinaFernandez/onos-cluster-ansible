@@ -5,7 +5,6 @@
   stat:
     path: /home/{{ onos.user.id }}/onos/apps/sdx-l2
   register: sdxl2_repo
-  become_user: "{{ onos.user.id }}"
 
 - name: Clone SDX-L2 repository
   git:
@@ -13,14 +12,11 @@
     dest: /home/{{ onos.user.id }}/onos/apps/sdx-l2
     force: no
   when: sdxl2_repo.stat.exists == False
-  become_user: "{{ onos.user.id }}"
 
 - name: Ensure SDX-L2 cell exists
   file:
     path: /home/{{ onos.user.id }}/onos/tools/test/cells/sdxl2
     state: touch
-  become_user: "{{ onos.user.id }}"
-  become: yes
 
 #- name: Add SDX-L2 app to modules.defs
 #  lineinfile:
@@ -53,8 +49,6 @@
       export OC2=""
       export OC3=""
       export ONOS_APPS="drivers,openflow,drivers.corsa"
-  become_user: "{{ onos.user.id }}"
-  become: yes
 
 - name: Replace OCX IPs in environment
   replace:
@@ -69,8 +63,6 @@
     iface: "{{ item.value.ip | get_dict_value_for_key('mgmt') }}"
   with_dict:
     "{{ onos.controllers }}"
-  become_user: "{{ onos.user.id }}"
-  become: yes
 
 - name: Replace ONOS_NIC IP range in environment
   replace:
@@ -85,5 +77,3 @@
     iface_ip_net: "{{ item.value | get_dict_value_for_key('mgmt') }}"
   with_dict:
     "{{ onos.controllers.onos1 }}"
-  become_user: "{{ onos.user.id }}"
-  become: yes

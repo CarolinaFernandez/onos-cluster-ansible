@@ -106,6 +106,8 @@
   # Initialise ssh-agent at bot or after a crash
   - name: Check ssh-agent status
     shell: "ps aux | grep ssh-agent | grep {{ onos.user.id }} | grep -v grep | wc -l"
+    args:
+      executable: /bin/bash
     ignore_errors: True
     register: running_ssh_agent
     become: yes
@@ -113,8 +115,15 @@
   - name: Define SSH-agent
     shell: |
       ssh-agent > ~/.ssh/ssh-agent-info
+#    shell: |
+#      ssh_a_file="/home/{{ onos.user.id }}/.ssh/ssh-agent-info"
+#      ssh-agent > $ssh_a_file
+#      chown {{ onos.user.id }}:{{ onos.group.id }} $ssh_a_file
     args:
       executable: /bin/bash
+    vars:
+      ansible_user: "{{ onos.user.id }}"
+      ansible_ssh_pass: "{{ onos.user.pass }}"
     become_user: "{{ onos.user.id }}"
     become: yes
     when: running_ssh_agent.stdout | int < 1

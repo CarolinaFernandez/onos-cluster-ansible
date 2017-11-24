@@ -5,7 +5,6 @@
   stat:
     path: ~/onos
   register: onos_repo
-  become_user: "{{ onos.user.id }}"
 
 - name: Clone ONOS repository
   git:
@@ -14,21 +13,23 @@
     version: "{{ onos.version }}"
     force: no
   when: onos_repo.stat.exists == False
-  become_user: "{{ onos.user.id }}"
 
 - name: Ensure .bashrc exists
   file:
     path: ~/.bashrc
     state: touch
-  become_user: "{{ onos.user.id }}"
 
+# Line must be added before non-interactivity SSH checks block any other command
 - name: Source ONOS dev's bash_profile
-  lineinfile:
+  blockinfile:
     dest: ~/.bashrc
     state: present
-    regexp: "^. ~/onos/tools/dev/bash_profile"
-    line: ". ~/onos/tools/dev/bash_profile"
-  become_user: "{{ onos.user.id }}"
+    insertbefore: BOF
+#    regexp: "^. ~/onos/tools/dev/bash_profile"
+    content: |
+    
+      # Source ONOS bash_profile before non-interactivity SSH checks block it (e.g. at EOF)
+      . ~/onos/tools/dev/bash_profile
 
 - name: Add scripts for SSH agent
   blockinfile:
@@ -56,34 +57,31 @@
       else
           start_agent;
       fi
-  become_user: "{{ onos.user.id }}"
 
-- name: Source .bashrc
+- name: Load latest changes from ~/.bashrc
   shell: . ~/.bashrc
+  args:
+    executable: /bin/bash
   become_user: "{{ onos.user.id }}"
+  become: yes
 
 - name: Replace SSH agent in "onos-wait-for-start"
   replace:
     path: ~/onos/tools/test/bin/onos-wait-for-start
     regexp: '(.*)ssh -t -t \$remote "(.*)'
     replace: '\1ssh -t -t -A $remote "\2'
-  become_user: "{{ onos.user.id }}"
 
 #- name: Generate private SSH key for ONOS cluster (deploying) instance
 #  openssl_privatekey:
 #    path: ~/.ssh/id_rsa_test_onos_cluster
 #    type: RSA
-#  become_user: "{{ onos.user.id }}"
 
 #- name: Generate public SSH key for ONOS cluster (deploying) instance
 #  openssl_publickey:
 #    path: ~/.ssh/id_rsa_test_onos_cluster.pub
 #    privatekey_path: ~/.ssh/id_rsa_test_onos_cluster
-#  become_user: "{{ onos.user.id }}"
 
 - name: Generate SSH keys for ONOS cluster (deploying) instance
   user:
     name: "{{ onos.user.id }}"
     generate_ssh_key: yes
-  become_user: "{{ onos.user.id }}"
-
