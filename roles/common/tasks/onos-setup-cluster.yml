@@ -1,48 +1,54 @@
 # Set-up ONOS cluster
 ---
 
-#- name: Copy ONOS scripts
-#  copy:
-#    src: "scripts/"
-#    dest: "/home/{{ onos.user.id }}/onos-scripts"
-##    directory_mode: true
-#    owner: "{{ onos.user.id }}"
-#    group: "{{ onos.group.id }}"
-#    mode: 0644
-#  become: yes
-
-## To do: double check symlinks do not affect other than performance
-#- name: Build ONOS repository sources
-#  shell: tools/build/onos-buck build onos-local --no-cache
-#  args:
-#    chdir: ~/onos
-#  ignore_errors: True
-#  become_user: "{{ onos.user.id }}"
-#  become: yes
+# To do: double check symlinks do not affect other than performance
+- name: Build ONOS repository sources
+  shell: ~/onos/tools/build/onos-buck build onos-local --no-cache
+  args:
+    executable: /bin/bash
+    chdir: ~/onos
+  ignore_errors: True
+  vars:
+    ansible_user: "{{ onos.user.id }}"
+    ansible_ssh_pass: "{{ onos.user.pass }}"
+  become_user: "{{ onos.user.id }}"
+  become: yes
 
 #- name: Insert SSH keys on ONOS cluster instances
-#  shell: "~/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
+#  shell: "/home/{{ onos.user.id }}/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
 #  vars:
 #    # Filter addresses in list to just have the IP value
 #    oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
+#  environment:
+#    LD_LIBRARY_PATH: /usr/local/lib
 #  with_dict:
 #    "{{ onos.controllers }}"
 #  become_user: "{{ onos.user.id }}"
 #  become: yes
 
+- name: Fetch $OC1 public key
+  shell: cat ~/.ssh/id_rsa.pub
+  register: ssh_oc1_key
+  become_user: "{{ onos.user.id }}"
+  become: yes
+
+# Warning: override onos-push-keys functionality
+# Use $OC1 public key to authorise its access to the rest of cluster nodes
+# Note: command is delegated to all cluster nodes, as double-hop SSH is expected
 - name: Insert SSH keys on ONOS cluster instances
-  shell: "/home/{{ onos.user.id }}/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
-#  script: "/bin/bash onos-push-keys $OC{{ oc }}"
-#  shell: "/usr/bin/sudo -iu {{ onos.user.id }} && . /home/sdn/onos/tools/dev/bash_profile && /home/sdn/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
-#  args:
-#    chdir: "/home/{{ onos.user.id }}/onos-scripts"
+  authorized_key:
+    state: present
+    user: "{{ onos.user.id }}"
+    key: "{{ item[0] }}"
+  delegate_to: "{{ item[1] }}"
   vars:
-    # Filter addresses in list to just have the IP value
-    oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
-  environment:
-    LD_LIBRARY_PATH: /usr/local/lib
-  with_dict:
-    "{{ onos.controllers }}"
+    target_ips: "{{ hostvars[inventory_hostname] }}"
+    ansible_user: "{{ onos.user.id }}"
+    ansible_ssh_pass: "{{ onos.user.pass }}"
+  with_nested:
+#    - "{{ lookup(\"file\", \"~/.ssh/id_rsa.pub\") }}"
+    - "{{ ssh_oc1_key.stdout }}"
+    - "{{ onos.controllers | ips_from_nodes(target_ips) }}"
   become_user: "{{ onos.user.id }}"
   become: yes
 
@@ -50,19 +56,26 @@
   # Prepare and run cluster when needed
   - name: Check cluster status
     shell: netstat -apen | grep 6653 | grep LISTEN | wc -l
+    args:
+      executable: /bin/bash
     ignore_errors: True
-    register: running_onos
-    become_user: "{{ onos.user.id }}"
+    register: running_cluster
     become: yes
 
   - name: Install prerequisites
-    shell: . ~/.bashrc && ~/onos/tools/test/bin/stc prerequisites
+    shell: ~/onos/tools/test/bin/stc prerequisites
+    args:
+      executable: /bin/bash
+      chdir: ~/onos
     become_user: "{{ onos.user.id }}"
     become: yes
-    when: running_onos.stdout | int < 1
+    when: running_cluster.stdout | int < 1
 
-  - name: Run the cluster
-    shell: . ~/.bashrc && ~/onos/tools/test/bin/stc setup
+  - name: Set-up the cluster
+    shell: ~/onos/tools/test/bin/stc setup
+    args:
+      executable: /bin/bash
+      chdir: ~/onos
     become_user: "{{ onos.user.id }}"
     become: yes
-    when: running_onos.stdout | int < 1
+    when: running_cluster.stdout | int < 1

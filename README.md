@@ -3,9 +3,6 @@
 Set of Ansible scripts to automate the deployment of an ONOS cluster in production.
 These scripts have been tested with  Ansible [2.4](http://docs.ansible.com/ansible/2.4/index.html)
 
-## Status
-Ongoing work. Issues when attempting `onos-push-keys`.
-
 ## Deployment
 
 ### Initial steps
@@ -81,4 +78,4 @@ Defaults        env_keep="no_proxy http_proxy https_proxy"
 
 ### Issues in deployment tasks
 
-Try replicating the step manually and run again the main bash file. For instance, commands requiring the environment variables may fail.
+Try replicating the step manually and run again the main bash file. For instance, the cluster setup may fail if the "stc" binary is corrupt, and under some circumstances, commands requiring the environment variables might fail.

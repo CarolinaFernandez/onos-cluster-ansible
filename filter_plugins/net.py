@@ -10,9 +10,10 @@ class FilterModule(object):
             "iface_in_target_node": self.iface_in_target_node,
             "ip_compute_subnet": self.ip_compute_subnet,
             "ip_strip_subnet": self.ip_strip_subnet,
+            "ips_from_nodes": self.ips_from_nodes,
         }
 
-    def match_get_nth_group(self, reg_exp, data, nth):
+    def __match_get_nth_group(self, reg_exp, data, nth):
         reg_match = re.match(reg_exp, str(data))
         if reg_match is not None and reg_match.groups >= (nth + 1):
             return reg_match.group(nth)
@@ -34,4 +35,15 @@ class FilterModule(object):
 
     def ip_strip_subnet(self, data):
         reg_exp = "(.*)\\/(?:.*)"
-        return self.match_get_nth_group(reg_exp, data, 1)
+        return self.__match_get_nth_group(reg_exp, data, 1)
+
+    def ips_from_nodes(self, data, hostvars):
+        controller_ips = []
+        dict_nodes = hostvars["onos"]["controllers"]
+        for node, node_cfg in dict_nodes.iteritems():
+            ips = node_cfg["ip"]
+            for ip in ips:
+                if "mgmt" in ip:
+                    controller_ips.append(self.ip_strip_subnet(ip["mgmt"]))
+        return controller_ips
+

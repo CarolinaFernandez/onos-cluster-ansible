@@ -11,7 +11,7 @@ class FilterModule(object):
             "get_dict_value_for_key": self.get_dict_value_for_key,
         }
 
-    def match_get_nth_group(self, reg_exp, data, nth):
+    def __match_get_nth_group(self, reg_exp, data, nth):
         reg_match = re.match(reg_exp, str(data))
         if reg_match is not None and reg_match.groups >= (nth + 1):
             return reg_match.group(nth)
@@ -19,14 +19,14 @@ class FilterModule(object):
 
     def get_dict_key(self, data):
         reg_exp = "{(?:u')?(.*?)(?:')?: (?:u')?(.*?)(?:')?}"
-        return self.match_get_nth_group(reg_exp, data, 1)
+        return self.__match_get_nth_group(reg_exp, data, 1)
 
     def get_dict_value(self, data):
         reg_exp = "{(?:u')?(?:.*?)(?:')?: (?:u')?(.*?)(?:')?}"
-        return self.match_get_nth_group(reg_exp, data, 1)
+        return self.__match_get_nth_group(reg_exp, data, 1)
 
     def get_dict_value_for_key(self, data, key):
         reg_exp = "{(?:u')?%s(?:')?: (?:u')?(.*?)(?:')?}".replace("%s", key)
         if isinstance(data, list):
             data = data[0]
-        return self.match_get_nth_group(reg_exp, data, 1)
+        return self.__match_get_nth_group(reg_exp, data, 1)
