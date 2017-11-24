@@ -11,31 +11,35 @@ The final structure must be similar to the one below.
 
 ```bash
 .
-├──  ansible.cfg
+├── ansible.cfg
 ├── call.bash
 ├── filter_plugins
-│   └──custom.py
+│   ├── dict.py
+│   └── net.py
 ├── inventories
 │   └── production
-│       └── group_vars
-│           ├── all
-│           └── all.tpl
+│       ├── group_vars
+│       │   ├── all
+│       │   └── all.tpl
 │       ├── hosts
 │       └── hosts.tpl
 ├── README.md
 ├── roles
-│   └── common
-│       └── tasks
-│           ├── onos-git-sources.yml
-│           ├── onos-setup-cluster.yml
-│           └── sdxl2-git-sources.yml
-│   └── network
-│       └── tasks
-│           ├── netcfg-clients.yml
-│           └── netcfg-controllers.yml
-│   └── packages
-│       └──  tasks
-│           └── install-prereqs.yml
+│   ├── common
+│   │   └── tasks
+│   │       ├── onos-git-sources.yml
+│   │       ├── onos-setup-cluster.yml
+│   │       └── sdxl2-git-sources.yml
+│   ├── network
+│   │   └── tasks
+│   │       ├── host-config-name.yml
+│   │       ├── iface-config-ip.yml
+│   │       ├── netcfg-clients.yml
+│   │       └── netcfg-controllers.yml
+│   ├── packages
+│   │   └──  tasks
+│   │       ├── install-java.yml
+│   │       └── install-prereqs.yml
 │   └── user
 │       └── tasks
 │           └── create-onos-user.yml
@@ -53,17 +57,17 @@ chmod +x call.bash
 bash call.bash
 ```
 
-After all tasks are executed, the expected output is similar to the one below:
+After all tasks are executed, the output should be more or less similar to the one below:
 
 ```bash
 PLAY RECAP ******************************************************************
 a1.b1.c1.d1                : ok=3    changed=1    unreachable=0    failed=0
 a2.b2.c2.d2                : ok=3    changed=1    unreachable=0    failed=0
 a3.b3.c3.d3                : ok=3    changed=1    unreachable=0    failed=0
-a4.b4.c4.d4                : ok=17   changed=4    unreachable=0    failed=0
+a4.b4.c4.d4                : ok=20   changed=6    unreachable=0    failed=0
 a5.b5.c5.d5                : ok=3    changed=1    unreachable=0    failed=0
-a6.b6.c6.d6                : ok=17   changed=4    unreachable=0    failed=0
-a7.b7.c7.d7                : ok=33   changed=10   unreachable=0    failed=1
+a6.b6.c6.d6                : ok=20   changed=6    unreachable=0    failed=0
+a7.b7.c7.d7                : ok=41   changed=17   unreachable=0    failed=0
 ```
 
 ## Troubleshooting
