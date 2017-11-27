@@ -77,3 +77,16 @@
     iface_ip_net: "{{ item.value | get_dict_value_for_key('mgmt') }}"
   with_dict:
     "{{ onos.controllers.onos1 }}"
+
+# Line must be added before non-interactivity SSH checks block any other command
+- name: Load SDXL2 cell
+  blockinfile:
+    dest: ~/.bashrc
+    state: present
+    marker: "# {mark} ANSIBLE MANAGED BLOCK cell (sdxl2)"
+    insertbefore: "^# ~/.bashrc: executed(.*)"
+    content: |
+
+      # Load specific SDX-L2 cell
+      cell sdxl2
+

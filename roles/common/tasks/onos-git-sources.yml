@@ -24,6 +24,7 @@
   blockinfile:
     dest: ~/.bashrc
     state: present
+    marker: "# {mark} ANSIBLE MANAGED BLOCK cell source (onos bash_profile)"
     insertbefore: BOF
 #    regexp: "^. ~/onos/tools/dev/bash_profile"
     content: |
@@ -35,6 +36,7 @@
   blockinfile:
     dest: ~/.profile
     state: present
+    marker: "# {mark} ANSIBLE MANAGED BLOCK ssh-agent"
     content: |
       
       SSH_ENV="$HOME/.ssh/environment"
