@@ -60,12 +60,9 @@
           start_agent;
       fi
 
-- name: Load latest changes from ~/.bashrc
-  shell: . ~/.bashrc
-  args:
-    executable: /bin/bash
-  become_user: "{{ onos.user.id }}"
-  become: yes
+- import_tasks: ../../user/tasks/load-bashrc.yml
+  vars:
+    user: "{{ onos.user.id }}"
 
 - name: Replace SSH agent in "onos-wait-for-start"
   replace:

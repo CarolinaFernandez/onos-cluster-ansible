@@ -1,0 +1,24 @@
+# Load or unload SDX-L2 cell
+---
+
+# Required values:
+#  - state: "present" or "absent" (without quotes)
+
+# Line must be present before non-interactivity SSH checks block any other command
+# Required to assess password-less connectivity across the cluster
+# Must not be set for cluster set-up
+- name: "{{ status }} SDXL2 cell"
+  blockinfile:
+    dest: ~/.bashrc
+    state: "{{ state }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK cell (sdxl2)"
+    insertbefore: "^# ~/.bashrc: executed(.*)"
+    content: |
+
+      # Load specific SDX-L2 cell
+      cell sdxl2
+  vars:
+    status: "{{ state | regex_replace(\"present\", \"Load\") | regex_replace(\"absent\", \"Unload\") }}"
+  become_user: "{{ onos.user.id }}"
+  become: yes
+

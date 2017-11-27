@@ -1,0 +1,13 @@
+# Load .bashrc for specific user
+---
+
+# Required values:
+#  - user: name of existing user
+
+- name: Load latest ~/.bashrc
+  shell: . ~/.bashrc
+  args:
+    executable: /bin/bash
+  become_user: "{{ user }}"
+  become: yes
+

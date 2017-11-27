@@ -19,30 +19,32 @@ The final structure must be similar to the one below.
 ├── inventories
 │   └── production
 │       ├── group_vars
-│       │   ├── all
-│       │   └── all.tpl
+│       │   ├── all
+│       │   └── all.tpl
 │       ├── hosts
 │       └── hosts.tpl
 ├── README.md
 ├── roles
 │   ├── common
-│   │   └── tasks
-│   │       ├── onos-git-sources.yml
-│   │       ├── onos-setup-cluster.yml
-│   │       └── sdxl2-git-sources.yml
+│   │   └── tasks
+│   │       ├── onos-git-sources.yml
+│   │       ├── onos-setup-cluster.yml
+│   │       ├── sdxl2-git-sources.yml
+│   │       └── sdxl2-load-cell.yml
 │   ├── network
-│   │   └── tasks
-│   │       ├── host-config-name.yml
-│   │       ├── iface-config-ip.yml
-│   │       ├── netcfg-clients.yml
-│   │       └── netcfg-controllers.yml
+│   │   └── tasks
+│   │       ├── host-config-name.yml
+│   │       ├── iface-config-ip.yml
+│   │       ├── netcfg-clients.yml
+│   │       └── netcfg-controllers.yml
 │   ├── packages
-│   │   └──  tasks
-│   │       ├── install-java.yml
-│   │       └── install-prereqs.yml
+│   │   └── tasks
+│   │       ├── install-java.yml
+│   │       └── install-prereqs.yml
 │   └── user
 │       └── tasks
-│           └── create-onos-user.yml
+│           ├── create-onos-user.yml
+│           └── load-bashrc.yml
 └── site.yml
 ```
 

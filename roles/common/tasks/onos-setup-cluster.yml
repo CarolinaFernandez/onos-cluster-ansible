@@ -10,7 +10,7 @@
   become: yes
 
 - block:
-  # Prepare and run cluster if not done already
+  # Run cluster if nothing is there
   - name: Find previous cluster-temp files
     find:
       paths: "/tmp"
@@ -26,13 +26,12 @@
     with_items:
       - "{{ onos_cluster_prev_tmp_files.files }}"
 
-  - name: Clear previous buck-out directory
-    file:
-      path: "{{ item}}"
-      state: absent
-    with_items:
-      ~/onos/buck-out
+  - name: Find previous buck-out directory
+    stat:
+      path: ~/onos/buck-out
+    register: buck_prev_tmp_files
 
+  # Build source for first time, if not done already
   - name: Build ONOS repository sources
     shell: ~/onos/tools/build/onos-buck build onos-local --no-cache
     args:
@@ -41,47 +40,64 @@
     vars:
       ansible_user: "{{ onos.user.id }}"
       ansible_ssh_pass: "{{ onos.user.pass }}"
+    when: buck_prev_tmp_files.stat.isdir is not defined or buck_prev_tmp_files.stat.isdir == False
 
-#  - name: Insert SSH keys on ONOS cluster instances
-#    shell: "/home/{{ onos.user.id }}/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
+  - block:
+  # Prepare cluster for first time, if not done already
+
+#    - name: Insert SSH keys on ONOS cluster instances
+#      shell: "/home/{{ onos.user.id }}/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
+#      vars:
+#        # Filter addresses in list to just have the IP value
+#        oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
+#      environment:
+#        LD_LIBRARY_PATH: /usr/local/lib
+#      with_dict:
+#        "{{ onos.controllers }}"
+
+    - name: Fetch $OC1 public key
+      shell: cat ~/.ssh/id_rsa.pub
+      register: ssh_oc1_key
+
+    # Warning: override onos-push-keys functionality
+    # Use $OC1 public key to authorise its access to the rest of cluster nodes
+    # Note: command is delegated to all cluster nodes, as double-hop SSH is expected
+    - name: Insert SSH keys on ONOS cluster instances
+      authorized_key:
+        state: present
+        user: "{{ onos.user.id }}"
+        key: "{{ item[0] }}"
+      delegate_to: "{{ item[1] }}"
+      vars:
+        target_ips: "{{ hostvars[inventory_hostname] }}"
+        ansible_user: "{{ onos.user.id }}"
+        ansible_ssh_pass: "{{ onos.user.pass }}"
+      with_nested:
+#        - "{{ lookup(\"file\", \"~/.ssh/id_rsa.pub\") }}"
+        - "{{ ssh_oc1_key.stdout }}"
+        - "{{ onos.controllers | ips_from_nodes(target_ips) }}"
+
+    - name: Install prerequisites
+      shell: ~/onos/tools/test/bin/stc prerequisites
+      args:
+        executable: /bin/bash
+        chdir: ~/onos
+
+    when: onos_cluster_prev_tmp_files.files is not defined
+
+#  - import_tasks: sdxl2-load-cell.yml
 #    vars:
-#      # Filter addresses in list to just have the IP value
-#      oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
-#    environment:
-#      LD_LIBRARY_PATH: /usr/local/lib
-#    with_dict:
-#      "{{ onos.controllers }}"
+#      state: absent
 
-  - name: Fetch $OC1 public key
-    shell: cat ~/.ssh/id_rsa.pub
-    register: ssh_oc1_key
-
-  # Warning: override onos-push-keys functionality
-  # Use $OC1 public key to authorise its access to the rest of cluster nodes
-  # Note: command is delegated to all cluster nodes, as double-hop SSH is expected
-  - name: Insert SSH keys on ONOS cluster instances
-    authorized_key:
-      state: present
-      user: "{{ onos.user.id }}"
-      key: "{{ item[0] }}"
-    delegate_to: "{{ item[1] }}"
-    vars:
-      target_ips: "{{ hostvars[inventory_hostname] }}"
-      ansible_user: "{{ onos.user.id }}"
-      ansible_ssh_pass: "{{ onos.user.pass }}"
-    with_nested:
-  #    - "{{ lookup(\"file\", \"~/.ssh/id_rsa.pub\") }}"
-      - "{{ ssh_oc1_key.stdout }}"
-      - "{{ onos.controllers | ips_from_nodes(target_ips) }}"
-
-  - name: Install prerequisites
-    shell: ~/onos/tools/test/bin/stc prerequisites
-    args:
-      executable: /bin/bash
-      chdir: ~/onos
+#  - import_tasks: ../../user/tasks/load-bashrc.yml
+#    vars:
+#      user: "{{ onos.user.id }}"
 
   - name: Set-up the cluster
-    shell: ~/onos/tools/test/bin/stc setup
+    shell: 
+      . ~/.bashrc \
+      && cell sdxl2 \
+      && ~/onos/tools/test/bin/stc setup
     args:
       executable: /bin/bash
       chdir: ~/onos

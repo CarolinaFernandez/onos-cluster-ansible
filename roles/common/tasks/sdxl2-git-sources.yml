@@ -78,15 +78,6 @@
   with_dict:
     "{{ onos.controllers.onos1 }}"
 
-# Line must be added before non-interactivity SSH checks block any other command
-- name: Load SDXL2 cell
-  blockinfile:
-    dest: ~/.bashrc
-    state: present
-    marker: "# {mark} ANSIBLE MANAGED BLOCK cell (sdxl2)"
-    insertbefore: "^# ~/.bashrc: executed(.*)"
-    content: |
-
-      # Load specific SDX-L2 cell
-      cell sdxl2
-
+#- import_tasks: sdxl2-load-cell.yml
+#  vars:
+#    state: present
