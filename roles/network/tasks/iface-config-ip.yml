@@ -8,7 +8,9 @@
 # Not using nmcli tasks as these depend on failing package ("dbus-python" bindings)
 - name: "Configure data plane interfaces per {{ type }}"
   shell:
-    ip addr flush dev {{ iface_name }} && ip addr add {{ iface_ip_net }} dev {{ iface_name }}
+    ip addr flush dev {{ iface_name }} \
+    && ip addr add {{ iface_ip_net }} dev {{ iface_name }} \
+    && ip link set {{ iface_name }} up
   args:
     executable: /bin/bash
   ignore_errors: True
