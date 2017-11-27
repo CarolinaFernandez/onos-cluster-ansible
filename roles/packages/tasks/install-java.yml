@@ -32,15 +32,6 @@
       update_cache: yes
     become: yes
 
-#  - name: Accept Java 8 license
-#    debconf:
-#      name: oracle-java8-installer
-#      question: shared/accepted-oracle-license-v1-1
-#      unseen: false
-#      value: true
-#      vtype: select
-#    become: yes
-
   # Undo: echo unregister shared/accepted-oracle-license-v1-1 | debconf-communicate oracle-java8-installer
   - name: Automatically select the Oracle license
     shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections

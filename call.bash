@@ -34,7 +34,6 @@ install_ansible_package() {
 deb http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main
 deb-src http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main" >> $sources_list
     fi
-#    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7BB9C367
     # Circumvent possible port filtering
     sudo gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 7BB9C367
     sudo apt-add-repository ppa:ansible/ansible
@@ -83,14 +82,11 @@ exit_on_error() {
 header "Installing required packages locally..."
 install_apt_packages || exit_on_error "Cannot install expected packages" $?
 install_ansible_package || exit_on_error "Cannot install Ansible" $?
-#install_pip_packages || exit_on_error "Cannot install expected packages" $?
 
 header "Setting up key for deployment..."
 # Set-up key for deployment
 setup_deployment_key || exit_on_error "Cannot set-up deployment key" $?
 
 header "Running deployment tasks..."
-#env="inventories/production"
 # Run master playbook, asking pass of remote user, notifying os escalation, passing inventory and variables (use paramiko to connect with pass)
-#ansible-playbook site.yml --become --ask-become-pass --become-user=root -i $env/hosts -e @$env/group_vars/all --limit controllers -c paramiko
 ansible-playbook site.yml --become --ask-become-pass --become-user=root -e @inventories/production/group_vars/all

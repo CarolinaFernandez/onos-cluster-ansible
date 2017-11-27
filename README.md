@@ -1,13 +1,19 @@
 # onos-cluster-ansible
 
-Set of Ansible scripts to automate the deployment of an ONOS cluster in production.
-These scripts have been tested with  Ansible [2.4](http://docs.ansible.com/ansible/2.4/index.html)
+Set of Ansible scripts (tested for [2.4](http://docs.ansible.com/ansible/2.4/index.html)) to automate the deployment of an ONOS cluster in production.
 
 ## Deployment
 
 ### Initial steps
+Copy the `all.tpl` and `hosts.tpl` into `all` and `hosts`, respectively; and replace all tags between `%` with appropriate values *(do not modify the templated values, between `{` and `}`)*.
 
-The final structure must be similar to the one below.
+**Note 1**: atm, the scripts are defined to run with 3-node clusters.
+
+**Note 2**: within `hosts`, the first IP defined under "controllers" should be that of the node that will contain the ONOS source and will act as $OC1. All subsequent nodes will be named $OC2 and $OC3, respectively.
+
+**Note 3**: the management IP of each node defined in `all` should match the IP of such node in `hosts`. This is required to perform matching in actions related to network configuration.
+
+The final structure must be similar to the one below:
 
 ```bash
 .
@@ -29,8 +35,7 @@ The final structure must be similar to the one below.
 │   │   └── tasks
 │   │       ├── onos-git-sources.yml
 │   │       ├── onos-setup-cluster.yml
-│   │       ├── sdxl2-git-sources.yml
-│   │       └── sdxl2-load-cell.yml
+│   │       └── sdxl2-git-sources.yml
 │   ├── network
 │   │   └── tasks
 │   │       ├── host-config-name.yml
@@ -47,10 +52,6 @@ The final structure must be similar to the one below.
 │           └── load-bashrc.yml
 └── site.yml
 ```
-
-Thus, copy the `all.tpl` and `hosts.tpl` into `all` and `hosts`, respectively; and replace all tags between `%` with appropriate values *(do not modify the templated values, between `{` and `}`)*.
-
-**Note**: the management IP of each node defined in `all` should match the IP of such node in `hosts`. This is required to perform matching in actions related to network configuration.
 
 ## Running the script
 

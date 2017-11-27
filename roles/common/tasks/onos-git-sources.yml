@@ -26,7 +26,6 @@
     state: present
     marker: "# {mark} ANSIBLE MANAGED BLOCK cell source (onos bash_profile)"
     insertbefore: BOF
-#    regexp: "^. ~/onos/tools/dev/bash_profile"
     content: |
     
       # Source ONOS bash_profile before non-interactivity SSH checks block it (e.g. at EOF)
@@ -69,16 +68,6 @@
     path: ~/onos/tools/test/bin/onos-wait-for-start
     regexp: '(.*)ssh -t -t \$remote "(.*)'
     replace: '\1ssh -t -t -A $remote "\2'
-
-#- name: Generate private SSH key for ONOS cluster (deploying) instance
-#  openssl_privatekey:
-#    path: ~/.ssh/id_rsa_test_onos_cluster
-#    type: RSA
-
-#- name: Generate public SSH key for ONOS cluster (deploying) instance
-#  openssl_publickey:
-#    path: ~/.ssh/id_rsa_test_onos_cluster.pub
-#    privatekey_path: ~/.ssh/id_rsa_test_onos_cluster
 
 - name: Generate SSH keys for ONOS cluster (deploying) instance
   user:

@@ -45,16 +45,6 @@
   - block:
   # Prepare cluster for first time, if not done already
 
-#    - name: Insert SSH keys on ONOS cluster instances
-#      shell: "/home/{{ onos.user.id }}/onos/tools/test/bin/onos-push-keys $OC{{ oc }}"
-#      vars:
-#        # Filter addresses in list to just have the IP value
-#        oc: "{{ item.key | regex_replace('onos(.*)', '\\1') }}"
-#      environment:
-#        LD_LIBRARY_PATH: /usr/local/lib
-#      with_dict:
-#        "{{ onos.controllers }}"
-
     - name: Fetch $OC1 public key
       shell: cat ~/.ssh/id_rsa.pub
       register: ssh_oc1_key
@@ -73,7 +63,6 @@
         ansible_user: "{{ onos.user.id }}"
         ansible_ssh_pass: "{{ onos.user.pass }}"
       with_nested:
-#        - "{{ lookup(\"file\", \"~/.ssh/id_rsa.pub\") }}"
         - "{{ ssh_oc1_key.stdout }}"
         - "{{ onos.controllers | ips_from_nodes(target_ips) }}"
 
@@ -84,14 +73,6 @@
         chdir: ~/onos
 
     when: onos_cluster_prev_tmp_files.files is not defined
-
-#  - import_tasks: sdxl2-load-cell.yml
-#    vars:
-#      state: absent
-
-#  - import_tasks: ../../user/tasks/load-bashrc.yml
-#    vars:
-#      user: "{{ onos.user.id }}"
 
   - name: Set-up the cluster
     shell: 

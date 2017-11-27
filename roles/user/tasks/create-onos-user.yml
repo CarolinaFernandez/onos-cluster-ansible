@@ -1,11 +1,6 @@
 # Create ONOS user
 ---
 
-#- name: Include variables
-#  include_vars:
-#    file: ../../../inventories/production/group_vars/all
-#    name: vars
-
 - name: Create group for user running ONOS
   group:
     name: "{{ onos.group.id }}"
@@ -62,8 +57,6 @@
     key: "{{ item }}"
   with_file:
     - "~/.ssh/id_rsa_onos_cluster.pub"
-#  with_lines:
-#    - "cat ~/.ssh/id_rsa_{{ deployment.user.id }}.pub"
   become_user: "{{ deployment.user.id }}"
   become: yes
 
@@ -115,10 +108,6 @@
   - name: Define SSH-agent
     shell: |
       ssh-agent > ~/.ssh/ssh-agent-info
-#    shell: |
-#      ssh_a_file="/home/{{ onos.user.id }}/.ssh/ssh-agent-info"
-#      ssh-agent > $ssh_a_file
-#      chown {{ onos.user.id }}:{{ onos.group.id }} $ssh_a_file
     args:
       executable: /bin/bash
     vars:
