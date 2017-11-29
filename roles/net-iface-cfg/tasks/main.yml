@@ -19,7 +19,7 @@
     iface_exists: "{{ iface_name | iface_exists(target_ips) }}"
     iface_in_target_node: "{{ nodes | iface_in_target_node(target, iface_ip) }}"
     target_ips: "{{ hostvars[inventory_hostname] }}"
-    target: "{{ inventory_hostname | ip_strip_subnet }}"
+    target: "{{ ansible_host | ip_strip_subnet }}"
     iface_name: "{{ item.1 | get_dict_key }}"
     iface_ip: "{{ iface_ip_net | ip_strip_subnet }}"
     iface_ip_net: "{{ item.1 | get_dict_value }}"

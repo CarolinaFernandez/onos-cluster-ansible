@@ -6,47 +6,61 @@
   become: yes
   become_user: root
   become_method: sudo
-  hosts: controllers
-  tasks:
-    - import_tasks: roles/packages/tasks/install-prereqs.yml
-    - import_tasks: roles/user/tasks/create-onos-user.yml
+  hosts: controllers, deployment[0]
+  roles:
+    - env
+    - user
 
 - name: Network configuration for controllers
   hosts: controllers
   remote_user: deployment.user.id
-  tasks:
-    - import_tasks: roles/network/tasks/netcfg-controllers.yml
+  # Parameters to roles defined as pre_tasks (could be inline, per role)
+  pre_tasks:
+    - set_fact:
+        nodes: "{{ onos.controllers }}"
+    - set_fact:
+        type: "controller"
+  roles:
+    - net-iface-cfg
+    - host-name
 
 - name: Network configuration for clients
   hosts: clients
   remote_user: deployment.user.id
-  tasks:
-    - import_tasks: roles/network/tasks/netcfg-clients.yml
+  # Parameters to roles defined as pre_tasks (could be inline, per role)
+  pre_tasks:
+    - set_fact:
+        nodes: "{{ onos.clients }}"
+    - set_fact:
+        type: "client"
+  roles:
+    - net-iface-cfg
+    - host-name
 
 - name: Clone ONOS repo
   become_user: "{{ onos.user.id }}"
   become: yes
-  hosts: controllers[0]
+  hosts: deployment[0]
   vars:
     ansible_user: "{{ onos.user.id }}"
     ansible_ssh_pass: "{{ onos.user.pass }}"
-  tasks:
-    - import_tasks: roles/common/tasks/onos-git-sources.yml
+  roles:
+    - onos-git
 
 - name: Clone SDXL2 repo
   become_user: "{{ onos.user.id }}"
   become: yes
-  hosts: controllers[0]
+  hosts: deployment[0]
   vars:
     ansible_user: "{{ onos.user.id }}"
     ansible_ssh_pass: "{{ onos.user.pass }}"
-  tasks:
-    - import_tasks: roles/common/tasks/sdxl2-git-sources.yml
+  roles:
+    - onos-app-sdxl2
 
 - name: Set-up ONOS cluster
-  hosts: controllers[0]
+  hosts: deployment[0]
   vars:
     ansible_user: "{{ onos.user.id }}"
     ansible_ssh_pass: "{{ onos.user.pass }}"
-  tasks:
-    - import_tasks: roles/common/tasks/onos-setup-cluster.yml
+  roles:
+    - onos-cluster

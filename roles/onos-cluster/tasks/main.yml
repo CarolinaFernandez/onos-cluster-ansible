@@ -45,8 +45,10 @@
   - block:
   # Prepare cluster for first time, if not done already
 
-    - name: Fetch $OC1 public key
+    - name: Fetch public key from local node
       shell: cat ~/.ssh/id_rsa.pub
+      args:
+        executable: /bin/bash
       register: ssh_oc1_key
 
     # Warning: override onos-push-keys functionality
@@ -67,12 +69,15 @@
         - "{{ onos.controllers | ips_from_nodes(target_ips) }}"
 
     - name: Install prerequisites
-      shell: ~/onos/tools/test/bin/stc prerequisites
+      shell:
+        . ~/.bashrc \
+        && cell sdxl2 \
+        && ~/onos/tools/test/bin/stc prerequisites
       args:
         executable: /bin/bash
         chdir: ~/onos
 
-    when: onos_cluster_prev_tmp_files.files is not defined
+    when: onos_cluster_prev_tmp_files.files | length == 0
 
   - name: Set-up the cluster
     shell: 

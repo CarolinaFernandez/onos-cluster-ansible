@@ -1,0 +1,22 @@
+# Evaluate if the cluster is well-defined
+---
+
+# inventory_hostname can be used instead of IP
+- name: Determining appropriate size for the cluster
+  shell: "echo \"{{ seq_length }}\""
+  args:
+    executable: /bin/bash
+  vars:
+    seq_length: "{{ onos.controllers | ips_from_nodes(target_ips) | length }}"
+    target_ips: "{{ hostvars[inventory_hostname] }}"
+  register: cluster_size
+
+- name: Asserting appropriate size for the cluster
+  assert:
+    that:
+      - "cluster_size.stdout | int % 2 == 1"
+    msg: "Number of controllers must be odd (found: {{ cluster_size.stdout }})"
+    vars:
+      target_ips: "{{ hostvars[inventory_hostname] }}"
+    run_once: yes
+

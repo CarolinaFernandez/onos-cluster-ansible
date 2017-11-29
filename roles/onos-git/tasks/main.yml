@@ -31,43 +31,9 @@
       # Source ONOS bash_profile before non-interactivity SSH checks block it (e.g. at EOF)
       . ~/onos/tools/dev/bash_profile
 
-- name: Add scripts for SSH agent
-  blockinfile:
-    dest: ~/.profile
-    state: present
-    marker: "# {mark} ANSIBLE MANAGED BLOCK ssh-agent"
-    content: |
-      
-      SSH_ENV="$HOME/.ssh/environment"
-      function start_agent {
-          echo "Initialising new SSH agent..."
-          /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
-          echo succeeded
-          chmod 600 "${SSH_ENV}"
-          . "${SSH_ENV}" > /dev/null
-          /usr/bin/ssh-add
-      }
-      
-      # Source SSH settings, if applicable
-      if [ -f "${SSH_ENV}" ]; then
-      . "${SSH_ENV}" > /dev/null
-      #ps ${SSH_AGENT_PID} doesn't work under cywgin
-      ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
-          start_agent;
-      }
-      else
-          start_agent;
-      fi
-
 - import_tasks: ../../user/tasks/load-bashrc.yml
   vars:
     user: "{{ onos.user.id }}"
-
-- name: Replace SSH agent in "onos-wait-for-start"
-  replace:
-    path: ~/onos/tools/test/bin/onos-wait-for-start
-    regexp: '(.*)ssh -t -t \$remote "(.*)'
-    replace: '\1ssh -t -t -A $remote "\2'
 
 - name: Generate SSH keys for ONOS cluster (deploying) instance
   user:
