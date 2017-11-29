@@ -1,6 +1,6 @@
-# SDX-L2 setup in an ONOS cluster
+# ONOS cluster deployment through Ansible
 
-Set of Ansible scripts (tested for [2.4](http://docs.ansible.com/ansible/2.4/index.html)) to automate the deployment of an ONOS (2k+1)-node cluster in production environments.
+Set of Ansible scripts (tested for [2.4](http://docs.ansible.com/ansible/2.4/index.html)) to automate a basic deployment for an ONOS (2k+1)-node cluster in a production environments.
 
 ## Deployment
 
