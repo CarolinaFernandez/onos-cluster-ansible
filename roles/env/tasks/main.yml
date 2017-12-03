@@ -1,0 +1,11 @@
+# Install required packages
+---
+
+- name: Install other ONOS dependencies
+  apt:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - git
+    - zip
+  become: yes

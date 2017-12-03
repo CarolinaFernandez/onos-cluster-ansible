@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXPECTED_ANSIBLE="2.4.1.0"
+EXPECTED_ANSIBLE="2.4.2.0"
 
 install_packages() {
   install_cmd=$1
@@ -42,19 +42,23 @@ deb-src http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main" >> $sources
     available_version=$(apt-cache policy ansible | grep $EXPECTED_ANSIBLE | grep -v "Candidate" | head -1 | awk '{ print $1 }')
     sudo apt-get install ansible=$available_version
   fi
-  if [[ $? != *"0"* ]]; then
-    exit_on_error "Invalid Ansible version detected: $version (expected: $EXPECTED_ANSIBLE)"
+  if [[ $(check_ansible_version) != *"0"* ]]; then
+    exit_on_error "Invalid Ansible version detected: $(get_ansible_version) (expected: $EXPECTED_ANSIBLE)"
   fi
   return 0
 }
 
+get_ansible_version() {
+  echo $(dpkg-query -W -f='${Version}' ansible)
+}
+
 check_ansible_version() {
-  version=$(dpkg-query -W -f='${Version}' ansible)
+  version=$(get_ansible_version)
   if [[ $version == *$EXPECTED_ANSIBLE* ]]; then
     echo 0
-    return
+  else
+    echo 1
   fi
-  echo 1
 }
 
 setup_deployment_key() {
