@@ -68,6 +68,34 @@
         - "{{ ssh_oc1_key.stdout }}"
         - "{{ onos.controllers | ips_from_nodes(target_ips) }}"
 
+    - name: Create aliases file
+      file:
+        path: "~/.bash_aliases"
+        state: touch
+        owner: "{{ onos.user.id }}"
+        group: "{{ onos.user.id }}"
+      delegate_to: "{{ item }}"
+      vars:
+        target_ips: "{{ hostvars[inventory_hostname] }}"
+        ansible_user: "{{ onos.user.id }}"
+        ansible_ssh_pass: "{{ onos.user.pass }}"
+      with_items: "{{ onos.controllers | ips_from_nodes(target_ips) }}"
+
+    - name: Define alias to connect to the ONOS cluster
+      blockinfile:
+        dest: ~/.bash_aliases
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK alias source (bash_aliases)"
+        insertbefore: BOF
+        content: |
+          alias onos-attach='ssh karaf@localhost -p 8101'
+      delegate_to: "{{ item }}"
+      vars:
+        target_ips: "{{ hostvars[inventory_hostname] }}"
+        ansible_user: "{{ onos.user.id }}"
+        ansible_ssh_pass: "{{ onos.user.pass }}"
+      with_items: "{{ onos.controllers | ips_from_nodes(target_ips) }}"
+
     - name: Install prerequisites
       shell:
         . ~/.bashrc \
